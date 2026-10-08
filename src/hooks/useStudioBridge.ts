@@ -11,10 +11,11 @@ import { useRouterStore, type Route } from '@/store/useRouterStore'
  *
  * The initial view is adopted synchronously by the router store (from `?view=`),
  * so there is no boot transient to announce. All of this no-ops when not
- * embedded (top-level window). Messages are same-origin and origin-validated.
+ * embedded (top-level window). Messages are restricted to the exact trusted Creators origin and parent window.
  */
 
 const SOURCE = 'tela-canvas'
+const TRUSTED_PARENT_ORIGIN = 'https://creators.undiscoveredone.com'
 type View = 'editor' | 'files'
 
 function viewForRoute(route: Route): View {
@@ -39,14 +40,14 @@ export function useStudioBridge() {
       view,
     }
     if (route.page === 'editor') message.designId = route.designId
-    window.parent.postMessage(message, window.location.origin)
+    window.parent.postMessage(message, TRUSTED_PARENT_ORIGIN)
   }, [route])
 
   // parent → child: apply a view the host asks for.
   useEffect(() => {
     if (!isEmbedded()) return
     function onMessage(e: MessageEvent) {
-      if (e.origin !== window.location.origin) return
+      if (e.origin !== TRUSTED_PARENT_ORIGIN || e.source !== window.parent) return
       const data = e.data
       if (!data || data.source !== SOURCE || data.type !== 'show') return
       const { navigate } = useRouterStore.getState()
