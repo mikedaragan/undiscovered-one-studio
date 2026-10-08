@@ -19,9 +19,9 @@
   --stone: #e2e8f0;
 
   /* Brand tokens — Brand */
-  --brand-dark: #182b52;
-  --brand-primary: #284acb;
-  --brand-accent: #e8efff;
+  --brand-dark: #075b54;
+  --brand-primary: #00a896;
+  --brand-accent: #e2f6f2;
 
   /* Brand tokens — Accent CTA scale */
   --ember-500: #F56139;
@@ -33,18 +33,18 @@
   --card-foreground: #101827;
   --popover: #ffffff;
   --popover-foreground: #101827;
-  --primary: #284acb;
+  --primary: #00a896;
   --primary-foreground: #ffffff;
   --secondary: #edf2f8;
   --secondary-foreground: #101827;
   --muted: #edf2f8;
   --muted-foreground: rgba(16, 15, 15, 0.6);
-  --accent: #e8efff;
-  --accent-foreground: #182b52;
+  --accent: #e2f6f2;
+  --accent-foreground: #075b54;
   --destructive: #ef3737;
   --border: #e2e8f0;
   --input: #e2e8f0;
-  --ring: #284acb;
+  --ring: #00a896;
 
   /* Radius */
   --radius: 9px;
@@ -55,18 +55,18 @@
   /* Sidebar */
   --sidebar: #ffffff;
   --sidebar-foreground: #101827;
-  --sidebar-primary: #284acb;
+  --sidebar-primary: #00a896;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #e8efff;
-  --sidebar-accent-foreground: #182b52;
+  --sidebar-accent: #e2f6f2;
+  --sidebar-accent-foreground: #075b54;
   --sidebar-border: #e2e8f0;
-  --sidebar-ring: #284acb;
+  --sidebar-ring: #00a896;
 
   /* Charts (brand-derived) */
-  --chart-1: #0017c7;
+  --chart-1: #00a896;
   --chart-2: #F56139;
-  --chart-3: #3e4576;
-  --chart-4: #d0e6e8;
+  --chart-3: #075b54;
+  --chart-4: #e2f6f2;
   --chart-5: #80a1a6;
 
   color-scheme: light;
