@@ -87,6 +87,9 @@ export function HomePage() {
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; items: CtxItem[] } | null>(null)
   const [templatesOpen, setTemplatesOpen] = useState(false)
 
+  // Creators supplies the library navigation when Studio is embedded.
+  const embeddedInCreators = typeof window !== 'undefined' && window.parent !== window && window.location.origin === 'https://studio.creators.undiscoveredone.com'
+
   // Build the right-click menu for a file / folder and open it at the cursor.
   const openFileMenu = (e: React.MouseEvent, file: DesignFile) => {
     e.preventDefault()
@@ -215,7 +218,7 @@ export function HomePage() {
   return (
     <div className="h-dvh flex bg-background">
       {/* Left sidebar (desktop) */}
-      <aside className="hidden md:flex w-[220px] bg-card border-r border-border flex-col shrink-0">
+      <aside className={embeddedInCreators ? "hidden" : "hidden md:flex w-[220px] bg-card border-r border-border flex-col shrink-0"}>
         {/* User */}
         <div className="px-4 py-4 border-b border-border">
           <div className="flex items-center gap-2.5">
@@ -285,7 +288,7 @@ export function HomePage() {
       {/* Main content */}
       <main className="flex-1 overflow-y-auto">
         {/* Mobile top bar — brand + nav pills + settings (replaces the sidebar) */}
-        <div className="md:hidden sticky top-0 z-10 bg-background/90 backdrop-blur border-b border-border">
+        <div className={embeddedInCreators ? "hidden" : "md:hidden sticky top-0 z-10 bg-background/90 backdrop-blur border-b border-border"}>
           <div className="flex items-center justify-between px-4 h-14">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center">
