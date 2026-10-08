@@ -4,6 +4,7 @@ import { verifyCreatorStudioAccess, type CreatorStudioAccess } from '@/cloud/cre
 const PARENT_ORIGIN = 'https://creators.undiscoveredone.com'
 const SOURCE = 'undiscovered-one-studio-auth'
 const API_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined
+const STUDIO_ORIGIN = 'https://studio.creators.undiscoveredone.com'
 
 type State = { status: 'waiting' | 'verifying' | 'authorized' | 'denied'; access?: CreatorStudioAccess; message?: string }
 
@@ -15,10 +16,11 @@ type State = { status: 'waiting' | 'verifying' | 'authorized' | 'denied'; access
  */
 export function StudioAuthGate({ children }: { children: React.ReactNode }) {
   const embedded = window.parent !== window
+  const trustedEmbed = embedded && document.referrer ? new URL(document.referrer).origin === PARENT_ORIGIN : embedded
   const [state, setState] = useState<State>({ status: 'waiting' })
 
   useEffect(() => {
-    if (!embedded) return
+    if (!embedded || !trustedEmbed || window.location.origin !== STUDIO_ORIGIN) return
     let current = 0
     const controller = new AbortController()
     const onMessage = (event: MessageEvent) => {
@@ -43,9 +45,10 @@ export function StudioAuthGate({ children }: { children: React.ReactNode }) {
     window.addEventListener('message', onMessage)
     window.parent.postMessage({ source: SOURCE, type: 'ready' }, PARENT_ORIGIN)
     return () => { ++current; controller.abort(); window.removeEventListener('message', onMessage) }
-  }, [embedded])
+  }, [embedded, trustedEmbed])
 
   if (!embedded) return <>{children}</>
+  if (!trustedEmbed || window.location.origin !== STUDIO_ORIGIN) return <main className="flex min-h-dvh items-center justify-center bg-background p-6">Open Studio from the Creators Dashboard.</main>
   if (state.status === 'authorized') return <>{children}</>
   return (
     <main className="flex min-h-dvh items-center justify-center bg-background px-6 text-foreground">
