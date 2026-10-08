@@ -10,13 +10,13 @@ export const BRAND_PALETTE: Record<string, BrandToken> = {
   'stone':        { label: 'Stone',         hex: '#ebe9e1', group: 'neutrals' },
 
   // --- Brand ---
-  'brand-dark':    { label: 'Brand Dark',    hex: '#3e4576', group: 'brand' },
-  'brand-primary': { label: 'Brand Primary', hex: '#0017c7', group: 'brand' },
-  'brand-accent':  { label: 'Brand Accent',  hex: '#d0e6e8', group: 'brand' },
+  'brand-dark':    { label: 'Brand Dark',    hex: '#075b54', group: 'brand' },
+  'brand-primary': { label: 'Brand Primary', hex: '#00a896', group: 'brand' },
+  'brand-accent':  { label: 'Brand Accent',  hex: '#e2f6f2', group: 'brand' },
 
   // --- Accent --- (swap these for your own brand accents)
   'accent-1':      { label: 'Accent 1', hex: '#dddde2', group: 'accent' },
-  'accent-2':      { label: 'Accent 2', hex: '#4c5ce0', group: 'accent' },
+  'accent-2':      { label: 'Accent 2', hex: '#00a896', group: 'accent' },
   'accent-3':      { label: 'Accent 3', hex: '#e9e0c0', group: 'accent' },
   'accent-4':      { label: 'Accent 4', hex: '#e75901', group: 'accent' },
 
