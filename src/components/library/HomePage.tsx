@@ -219,7 +219,7 @@ export function HomePage() {
         {/* User */}
         <div className="px-4 py-4 border-b border-border">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-full bg-[#3e4576] flex items-center justify-center">
+            <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center">
               <span className="text-[10px] font-bold text-white">
                 {BRAND.productName.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
               </span>
@@ -288,7 +288,7 @@ export function HomePage() {
         <div className="md:hidden sticky top-0 z-10 bg-background/90 backdrop-blur border-b border-border">
           <div className="flex items-center justify-between px-4 h-14">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-[#3e4576] flex items-center justify-center">
+              <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center">
                 <span className="text-[10px] font-bold text-white">
                   {BRAND.productName.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
                 </span>
