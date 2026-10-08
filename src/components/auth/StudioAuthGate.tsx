@@ -5,7 +5,7 @@ import { saveStudioSession, getStudioAccessToken, clearStudioSession } from '@/c
 
 const PARENT_ORIGIN = 'https://creators.undiscoveredone.com'
 const SOURCE = 'undiscovered-one-studio-auth'
-const API_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined
+const API_KEY = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined) || 'sb_publishable_7EBnCrQGg-t70X-3npS1Vg_2WZyEJIe'
 const STUDIO_ORIGIN = 'https://studio.creators.undiscoveredone.com'
 // Standalone access remains temporarily enabled until OAuth client registration
 // and the Cloudflare gateway are verified end-to-end.
