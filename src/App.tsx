@@ -77,16 +77,19 @@ function EditorView() {
 }
 
 export default function App() {
-  const route = useRouterStore((s) => s.route)
-
-  // Sync navigation with a parent /studio host when embedded (no-op standalone).
-  useStudioBridge()
-
-  // Expose the command bus to a parent window / agent harness (and window.tela).
-  useEffect(() => installAgentRpc(), [])
 
   return (
     <StudioAuthGate>
+      <AuthorizedStudio />
+    </StudioAuthGate>
+  )
+}
+
+function AuthorizedStudio() {
+  const route = useRouterStore((s) => s.route)
+  useStudioBridge()
+  useEffect(() => installAgentRpc(), [])
+  return (
     <TooltipProvider>
       {/* vaul scales this wrapper back (and rounds its corners) when a sheet opens,
           revealing the dark #root behind it — the iOS "page pushed back" depth. */}
@@ -96,6 +99,5 @@ export default function App() {
         {(route.page === 'editor' || route.page === 'editor-standalone' || route.page === 'project') && <EditorView />}
       </div>
     </TooltipProvider>
-    </StudioAuthGate>
   )
 }
