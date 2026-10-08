@@ -9,55 +9,58 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  /* Shared ecosystem UI theme; design canvas colors remain independent. */
+  --studio-heading-font: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --studio-body-font: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
   /* Brand tokens — Neutrals (see src/brand/palette.ts) */
-  --charcoal: #100f0f;
-  --cloud: #f8f8f3;
-  --paper: #f2f2eb;
-  --stone: #ebe9e1;
+  --charcoal: #101827;
+  --cloud: #f8fafc;
+  --paper: #ffffff;
+  --stone: #e2e8f0;
 
   /* Brand tokens — Brand */
-  --brand-dark: #3e4576;
-  --brand-primary: #0017c7;
-  --brand-accent: #d0e6e8;
+  --brand-dark: #182b52;
+  --brand-primary: #284acb;
+  --brand-accent: #e8efff;
 
   /* Brand tokens — Accent CTA scale */
   --ember-500: #F56139;
 
   /* Semantic mapping */
-  --background: #f8f8f3;
-  --foreground: #100f0f;
-  --card: #f2f2eb;
-  --card-foreground: #100f0f;
-  --popover: #f2f2eb;
-  --popover-foreground: #100f0f;
-  --primary: #0017c7;
+  --background: #f8fafc;
+  --foreground: #101827;
+  --card: #ffffff;
+  --card-foreground: #101827;
+  --popover: #ffffff;
+  --popover-foreground: #101827;
+  --primary: #284acb;
   --primary-foreground: #ffffff;
-  --secondary: #ebe9e1;
-  --secondary-foreground: #100f0f;
-  --muted: #ebe9e1;
+  --secondary: #edf2f8;
+  --secondary-foreground: #101827;
+  --muted: #edf2f8;
   --muted-foreground: rgba(16, 15, 15, 0.6);
-  --accent: #d0e6e8;
-  --accent-foreground: #100f0f;
+  --accent: #e8efff;
+  --accent-foreground: #182b52;
   --destructive: #ef3737;
-  --border: #ebe9e1;
-  --input: #ebe9e1;
-  --ring: #0017c7;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #284acb;
 
   /* Radius */
-  --radius: 5px;
+  --radius: 9px;
 
   /* Shadow (single permitted shadow) */
   --shadow-subtle: 0 1px 2px 0 rgba(17, 17, 17, 0.05);
 
   /* Sidebar */
-  --sidebar: #f2f2eb;
-  --sidebar-foreground: #100f0f;
-  --sidebar-primary: #0017c7;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #101827;
+  --sidebar-primary: #284acb;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #d0e6e8;
-  --sidebar-accent-foreground: #100f0f;
-  --sidebar-border: #ebe9e1;
-  --sidebar-ring: #0017c7;
+  --sidebar-accent: #e8efff;
+  --sidebar-accent-foreground: #182b52;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #284acb;
 
   /* Charts (brand-derived) */
   --chart-1: #0017c7;
@@ -74,8 +77,8 @@
      devices (-apple-system must lead), Segoe on Windows — then falls back to the
      bundled Inter. Canvas/design text stays Inter via engine/textMeasure.ts so
      exports are identical across devices. */
-  --font-heading: -apple-system, BlinkMacSystemFont, 'Segoe UI Variable', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI Variable', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--studio-heading-font);
+  --font-sans: var(--studio-body-font);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
