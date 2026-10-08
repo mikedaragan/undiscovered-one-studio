@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { verifyCreatorStudioAccess, type CreatorStudioAccess } from '@/cloud/creatorAccess'
+import { completeStudioSignIn, startStudioSignIn } from '@/cloud/studioOAuth'
 
 const PARENT_ORIGIN = 'https://creators.undiscoveredone.com'
 const SOURCE = 'undiscovered-one-studio-auth'
@@ -20,6 +21,20 @@ export function StudioAuthGate({ children }: { children: React.ReactNode }) {
   const embedded = window.parent !== window
   const trustedEmbed = embedded && document.referrer ? new URL(document.referrer).origin === PARENT_ORIGIN : embedded
   const [state, setState] = useState<State>({ status: 'waiting' })
+  const callback = window.location.pathname === '/auth/callback'
+  useEffect(() => {
+    if (!callback) return
+    let active = true
+    setState({ status: 'verifying' })
+    void completeStudioSignIn(window.location.search).then(async (tokens) => {
+      if (!API_KEY) throw new Error('Studio publishable key is not configured')
+      const access = await verifyCreatorStudioAccess(tokens.access_token, API_KEY)
+      if (active) setState({ status: 'authorized', access })
+    }).catch((error: unknown) => {
+      if (active) setState({ status: 'denied', message: error instanceof Error ? error.message : 'Sign-in failed' })
+    })
+    return () => { active = false }
+  }, [callback])
 
   useEffect(() => {
     if (!embedded || !trustedEmbed || window.location.origin !== STUDIO_ORIGIN) return
@@ -49,6 +64,10 @@ export function StudioAuthGate({ children }: { children: React.ReactNode }) {
     return () => { ++current; controller.abort(); window.removeEventListener('message', onMessage) }
   }, [embedded, trustedEmbed])
 
+  if (callback) {
+    if (state.status === 'authorized') return <>{children}</>
+    return <main className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background p-6"><h1>Graphic Studio sign-in</h1><p>{state.message ?? 'Completing your sign-in…'}</p><a href="https://creators.undiscoveredone.com" className="underline">Return to Creators</a></main>
+  }
   if (!embedded) return <>{children}</>
   if (!trustedEmbed || window.location.origin !== STUDIO_ORIGIN) return <main className="flex min-h-dvh items-center justify-center bg-background p-6">Open Studio from the Creators Dashboard.</main>
   if (state.status === 'authorized') return <>{children}</>
