@@ -3,15 +3,21 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/inter";
 
-/* Inter Variable is the bundled default. To use your own brand font, add an
+/* Undiscovered One UI typography. Satoshi is served through the official
+   Fontshare CSS; Bricolage Grotesque through Google Fonts. */
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap');
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap');
+
+/* Inter Variable remains available for canvas/export typography.
+   Inter Variable is the bundled default. To use your own brand font, add an
    @font-face here and set FONT_FAMILY in src/engine/textMeasure.ts. */
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
   /* Shared ecosystem UI theme; design canvas colors remain independent. */
-  --studio-heading-font: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-  --studio-body-font: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --studio-heading-font: "Bricolage Grotesque", "Satoshi", system-ui, sans-serif;
+  --studio-body-font: "Satoshi", system-ui, -apple-system, sans-serif;
   /* Brand tokens — Neutrals (see src/brand/palette.ts) */
   --charcoal: #101827;
   --cloud: #f8fafc;
@@ -149,7 +155,7 @@
     background-color: #000;
   }
   /* Balanced headings — no lonely last word (make-interfaces #10) */
-  h1, h2, h3, h4 {
+  h1, h2, h3, h4 {\n    font-family: var(--studio-heading-font);
     text-wrap: balance;
   }
   /* Chrome is UI — never selectable. Content stays selectable. (native-web §7) */
