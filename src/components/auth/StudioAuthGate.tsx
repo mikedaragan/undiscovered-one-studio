@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { verifyCreatorStudioAccess, type CreatorStudioAccess } from '@/cloud/creatorAccess'
 import { completeStudioSignIn, startStudioSignIn } from '@/cloud/studioOAuth'
+import { saveStudioSession, getStudioAccessToken, clearStudioSession } from '@/cloud/studioSession'
 
 const PARENT_ORIGIN = 'https://creators.undiscoveredone.com'
 const SOURCE = 'undiscovered-one-studio-auth'
@@ -29,12 +30,30 @@ export function StudioAuthGate({ children }: { children: React.ReactNode }) {
     void completeStudioSignIn(window.location.search).then(async (tokens) => {
       if (!API_KEY) throw new Error('Studio publishable key is not configured')
       const access = await verifyCreatorStudioAccess(tokens.access_token, API_KEY)
-      if (active) setState({ status: 'authorized', access })
+      if (active) { saveStudioSession(tokens); window.history.replaceState(null, '', '/'); setState({ status: 'authorized', access }) }
     }).catch((error: unknown) => {
       if (active) setState({ status: 'denied', message: error instanceof Error ? error.message : 'Sign-in failed' })
     })
     return () => { active = false }
   }, [callback])
+
+  useEffect(() => {
+    if (embedded || callback) return
+    let active = true
+    void getStudioAccessToken().then(async token => {
+      if (!active) return
+      if (!token || !API_KEY) { setState({ status: 'waiting' }); return }
+      setState({ status: 'verifying' })
+      try {
+        const access = await verifyCreatorStudioAccess(token, API_KEY)
+        if (active) setState({ status: 'authorized', access })
+      } catch (error) {
+        clearStudioSession()
+        if (active) setState({ status: 'denied', message: error instanceof Error ? error.message : 'Session validation failed' })
+      }
+    })
+    return () => { active = false }
+  }, [embedded, callback])
 
   useEffect(() => {
     if (!embedded || !trustedEmbed || window.location.origin !== STUDIO_ORIGIN) return
@@ -68,7 +87,10 @@ export function StudioAuthGate({ children }: { children: React.ReactNode }) {
     if (state.status === 'authorized') return <>{children}</>
     return <main className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background p-6"><h1>Graphic Studio sign-in</h1><p>{state.message ?? 'Completing your sign-in…'}</p><a href="https://creators.undiscoveredone.com" className="underline">Return to Creators</a></main>
   }
-  if (!embedded) return <>{children}</>
+  if (!embedded) {
+    if (state.status === 'authorized') return <>{children}</>
+    return <main className="flex min-h-dvh items-center justify-center bg-background px-6"><div className="max-w-md text-center"><h1 className="text-xl font-semibold">Undiscovered One Graphic Studio</h1><p className="my-4 text-sm text-muted-foreground">{state.message ?? (state.status === 'verifying' ? 'Checking artist access…' : 'Sign in with your Undiscovered One account to continue.')}</p><button className="rounded-md bg-teal-600 px-4 py-2 text-white" onClick={() => { void startStudioSignIn().catch(error => setState({ status: 'denied', message: error instanceof Error ? error.message : 'Unable to sign in' })) }}>Sign in with Undiscovered One</button></div></main>
+  }
   if (!trustedEmbed || window.location.origin !== STUDIO_ORIGIN) return <main className="flex min-h-dvh items-center justify-center bg-background p-6">Open Studio from the Creators Dashboard.</main>
   if (state.status === 'authorized') return <>{children}</>
   return (
