@@ -15,6 +15,7 @@ import { SettingsModal } from '@/components/panels/SettingsModal'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { useRouterStore } from '@/store/useRouterStore'
 import { useStudioBridge } from '@/hooks/useStudioBridge'
+import { StudioAuthGate } from '@/components/auth/StudioAuthGate'
 import { installAgentRpc } from '@/agent/rpc'
 import { useEffect } from 'react'
 import { useDesignStore } from '@/store/useDesignStore'
@@ -85,6 +86,7 @@ export default function App() {
   useEffect(() => installAgentRpc(), [])
 
   return (
+    <StudioAuthGate>
     <TooltipProvider>
       {/* vaul scales this wrapper back (and rounds its corners) when a sheet opens,
           revealing the dark #root behind it — the iOS "page pushed back" depth. */}
@@ -94,5 +96,6 @@ export default function App() {
         {(route.page === 'editor' || route.page === 'editor-standalone' || route.page === 'project') && <EditorView />}
       </div>
     </TooltipProvider>
+    </StudioAuthGate>
   )
 }
