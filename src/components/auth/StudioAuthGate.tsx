@@ -10,6 +10,8 @@ const STUDIO_ORIGIN = 'https://studio.creators.undiscoveredone.com'
 // Standalone access remains temporarily enabled until OAuth client registration
 // and the Cloudflare gateway are verified end-to-end.
 
+let callbackExchange: ReturnType<typeof completeStudioSignIn> | null = null
+
 type State = { status: 'waiting' | 'verifying' | 'authorized' | 'denied'; access?: CreatorStudioAccess; message?: string }
 
 /**
@@ -27,10 +29,16 @@ export function StudioAuthGate({ children }: { children: React.ReactNode }) {
     if (!callback) return
     let active = true
     setState({ status: 'verifying' })
-    void completeStudioSignIn(window.location.search).then(async (tokens) => {
+    // StrictMode runs mount effects twice in development; redeem the single-use code only once.
+    callbackExchange ??= completeStudioSignIn(window.location.search)
+    void callbackExchange.then(async (tokens) => {
       if (!API_KEY) throw new Error('Studio publishable key is not configured')
       const access = await verifyCreatorStudioAccess(tokens.access_token, API_KEY)
-      if (active) { saveStudioSession(tokens); window.history.replaceState(null, '', '/'); setState({ status: 'authorized', access }) }
+      if (active) {
+        saveStudioSession(tokens)
+        window.history.replaceState(null, '', '/')
+        window.location.replace('/')
+      }
     }).catch((error: unknown) => {
       if (active) setState({ status: 'denied', message: error instanceof Error ? error.message : 'Sign-in failed' })
     })
