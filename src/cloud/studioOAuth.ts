@@ -16,7 +16,7 @@ function base64url(buffer: ArrayBuffer): string {
 }
 
 export function studioOAuthClientId(): string {
-  return (import.meta.env.VITE_STUDIO_OAUTH_CLIENT_ID as string | undefined)?.trim() ?? ''
+  return (import.meta.env.VITE_STUDIO_OAUTH_CLIENT_ID as string | undefined)?.trim() || 'b4b14710-5d88-422e-8f4a-995a0ede1efc'
 }
 
 export async function startStudioSignIn(): Promise<void> {
