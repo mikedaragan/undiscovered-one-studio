@@ -5,6 +5,8 @@ const PARENT_ORIGIN = 'https://creators.undiscoveredone.com'
 const SOURCE = 'undiscovered-one-studio-auth'
 const API_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined
 const STUDIO_ORIGIN = 'https://studio.creators.undiscoveredone.com'
+// Standalone access remains temporarily enabled until OAuth client registration
+// and the Cloudflare gateway are verified end-to-end.
 
 type State = { status: 'waiting' | 'verifying' | 'authorized' | 'denied'; access?: CreatorStudioAccess; message?: string }
 
