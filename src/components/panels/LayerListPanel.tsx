@@ -366,7 +366,7 @@ export function LayerListPanel() {
 
                         <span className="text-[10px] text-muted-foreground/40 shrink-0 tabular-nums">{frame.width}x{frame.height}</span>
 
-                        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                        <div className="flex gap-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
                           <button className="p-1 hover:bg-muted rounded-[3px] text-muted-foreground/50 hover:text-muted-foreground cursor-pointer"
                             onClick={(e) => { e.stopPropagation(); duplicateFrame(frame.id) }} title="Duplicate" aria-label="Duplicate frame">
                             <Copy className="w-3.5 h-3.5" />
@@ -477,7 +477,7 @@ function LayerRow({
       onContextMenu={onContextMenu}
       style={{ paddingLeft: indentPx, paddingRight: 12 }}
       className={`
-        group relative flex items-center gap-2 py-2 cursor-pointer border-l-[3px] transition-colors
+        group relative flex items-center gap-2 py-3 md:py-2 cursor-pointer border-l-[3px] transition-colors
         ${isDragging ? 'opacity-40' : ''}
         ${isActive ? 'border-l-primary bg-accent/30' : isSelected ? 'border-l-primary/40 bg-accent/15' : 'border-l-transparent hover:bg-muted/50'}
       `}
@@ -505,24 +505,24 @@ function LayerRow({
         </span>
       )}
 
-      <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+      <div className="flex items-center gap-0.5 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
         style={{ opacity: isActive ? 1 : undefined }}>
-        <button className="p-0.5 hover:bg-muted rounded-[3px] text-muted-foreground/50 hover:text-muted-foreground cursor-pointer"
+        <button className="p-2 md:p-0.5 hover:bg-muted rounded-[3px] text-muted-foreground/50 hover:text-muted-foreground cursor-pointer"
           onClick={(e) => { e.stopPropagation(); onVisibility() }} aria-label={layer.visible ? 'Hide layer' : 'Show layer'}>
           {layer.visible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
         </button>
-        <button className="p-0.5 hover:bg-muted rounded-[3px] text-muted-foreground/50 hover:text-muted-foreground cursor-pointer"
+        <button className="p-2 md:p-0.5 hover:bg-muted rounded-[3px] text-muted-foreground/50 hover:text-muted-foreground cursor-pointer"
           onClick={(e) => { e.stopPropagation(); onLock() }} aria-label={layer.locked ? 'Unlock layer' : 'Lock layer'}>
           {layer.locked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
         </button>
         {onDuplicate && (
-          <button className="p-0.5 hover:bg-muted rounded-[3px] text-muted-foreground/50 hover:text-muted-foreground cursor-pointer"
+          <button className="p-2 md:p-0.5 hover:bg-muted rounded-[3px] text-muted-foreground/50 hover:text-muted-foreground cursor-pointer"
             onClick={(e) => { e.stopPropagation(); onDuplicate() }} aria-label="Duplicate layer">
             <Copy className="w-3.5 h-3.5" />
           </button>
         )}
         {onDelete && (
-          <button className="p-0.5 hover:bg-muted rounded-[3px] text-muted-foreground/50 hover:text-destructive cursor-pointer"
+          <button className="p-2 md:p-0.5 hover:bg-muted rounded-[3px] text-muted-foreground/50 hover:text-destructive cursor-pointer"
             onClick={(e) => { e.stopPropagation(); onDelete() }} aria-label="Delete layer">
             <Trash2 className="w-3.5 h-3.5" />
           </button>
@@ -579,16 +579,16 @@ function GroupHeaderRow({
       <span className="text-[12px] truncate flex-1 text-foreground/90">Group</span>
       <span className="text-[10px] text-muted-foreground/40 shrink-0 tabular-nums">{count}</span>
 
-      <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button className="p-0.5 hover:bg-muted rounded-[3px] text-muted-foreground/50 hover:text-muted-foreground cursor-pointer"
+      <div className="flex items-center gap-0.5 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+        <button className="p-2 md:p-0.5 hover:bg-muted rounded-[3px] text-muted-foreground/50 hover:text-muted-foreground cursor-pointer"
           onClick={(e) => { e.stopPropagation(); onVisibility() }} aria-label={anyVisible ? 'Hide group' : 'Show group'}>
           {anyVisible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
         </button>
-        <button className="p-0.5 hover:bg-muted rounded-[3px] text-muted-foreground/50 hover:text-muted-foreground cursor-pointer"
+        <button className="p-2 md:p-0.5 hover:bg-muted rounded-[3px] text-muted-foreground/50 hover:text-muted-foreground cursor-pointer"
           onClick={(e) => { e.stopPropagation(); onLock() }} aria-label={allLocked ? 'Unlock group' : 'Lock group'}>
           {allLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
         </button>
-        <button className="p-0.5 hover:bg-muted rounded-[3px] text-muted-foreground/50 hover:text-destructive cursor-pointer"
+        <button className="p-2 md:p-0.5 hover:bg-muted rounded-[3px] text-muted-foreground/50 hover:text-destructive cursor-pointer"
           onClick={(e) => { e.stopPropagation(); onDelete() }} aria-label="Delete group">
           <Trash2 className="w-3.5 h-3.5" />
         </button>
