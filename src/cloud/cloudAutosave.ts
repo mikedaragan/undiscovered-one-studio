@@ -19,14 +19,16 @@ export function createCloudAutosaver(
   let busy = false
   let timer: ReturnType<typeof setTimeout> | undefined
   let lastSavedFingerprint = ''
+  let retryRequired = false
 
   async function flush() {
     if (stopped || busy || !dirty) return
     const file = getFile()
-    if (!file || file.isScratchpad) return
+    if (!file || file.isScratchpad) { dirty = false; return }
     const fingerprint = JSON.stringify({ name: file.name, pages: file.pages, folderId: file.folderId })
     if (fingerprint === lastSavedFingerprint) { dirty = false; return }
     dirty = false
+    retryRequired = false
     busy = true
     try {
       const saved = cloudId
@@ -37,17 +39,19 @@ export function createCloudAutosaver(
       if (!stopped) onSaved(saved.id)
     } catch (cause) {
       dirty = true
+      retryRequired = true
       if (!stopped) onError(cause instanceof Error ? cause : new Error('Cloud save failed'))
     } finally {
       busy = false
       // If edits arrived during the request, queue another save, without overlap.
-      if (dirty && !stopped && lastSavedFingerprint) schedule()
+      if (dirty && !stopped && !retryRequired) schedule()
     }
   }
 
   function schedule() {
     if (stopped) return
     dirty = true
+    retryRequired = false
     if (timer) clearTimeout(timer)
     timer = setTimeout(() => { timer = undefined; void flush() }, 2000)
   }
