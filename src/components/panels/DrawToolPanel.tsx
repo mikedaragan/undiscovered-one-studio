@@ -1,4 +1,5 @@
-import { Pen, Highlighter, Eraser } from 'lucide-react'
+import { Pen, Highlighter, Eraser, Palette } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useUIStore } from '@/store/useUIStore'
 import { useDesignStore } from '@/store/useDesignStore'
 import { BrandColorPicker } from '@/components/panels/BrandColorPicker'
@@ -10,6 +11,14 @@ import type { BrandColor, DrawMode } from '@/types/design'
 const PEN_SIZES = [3, 6, 12, 24]
 const MARKER_SIZES = [12, 22, 40, 64]
 const SIZE_LABELS = ['S', 'M', 'L', 'XL']
+const RECENT_KEY = 'undiscovered-one-studio-draw-recent-colors'
+function loadRecentColors(): string[] {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]')
+    return Array.isArray(parsed) ? parsed.filter((hex): hex is string => typeof hex === 'string' && /^#[0-9a-fA-F]{6}$/.test(hex)).slice(0, 5) : []
+  } catch { return [] }
+}
+
 
 // A sample squiggle (in a 600×120 space) drawn with the current settings, so you
 // see the actual pen before committing. Varying segment lengths let the
@@ -88,6 +97,17 @@ export function DrawToolPanel() {
   const setColor = isHighlighter ? setHighlighterColor : setDrawColor
   const width = isHighlighter ? highlighterWidth : drawWidth
   const setWidth = isHighlighter ? setHighlighterWidth : setDrawWidth
+  const [recentColors, setRecentColors] = useState<string[]>(loadRecentColors)
+  useEffect(() => {
+    if (!/^#[0-9a-fA-F]{6}$/.test(color.hex)) return
+    const hex = color.hex.toLowerCase()
+    setRecentColors((previous) => {
+      if (previous[0] === hex) return previous
+      const next = [hex, ...previous.filter((value) => value !== hex)].slice(0, 5)
+      try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)) } catch { /* storage unavailable */ }
+      return next
+    })
+  }, [color.hex])
 
   // Pen / Marker set the draw tool + mode; Eraser is its own tool.
   const modes = [
@@ -132,6 +152,24 @@ export function DrawToolPanel() {
       <PenPreview mode={mode} width={width} color={color} thinning={thinning} taper={taper} smoothing={smoothing} />
 
       <BrandColorPicker label="Color" value={color} onChange={setColor} />
+      <div className="space-y-2">
+        <div className="text-[12px] text-muted-foreground">Recent colors</div>
+        <div className="flex flex-wrap items-center gap-2">
+          {recentColors.map((hex) => (
+            <button key={hex} type="button" title={hex} aria-label={`Use recent color ${hex}`}
+              onClick={() => setColor({ token: 'custom', hex })}
+              className={`h-7 w-7 rounded-full border border-black/10 ${color.hex.toLowerCase() === hex ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+              style={{ backgroundColor: hex }} />
+          ))}
+          <label title="Choose custom color" className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-border bg-muted">
+            <Palette className="h-4 w-4 text-muted-foreground" />
+            <input type="color" aria-label="Choose custom drawing color"
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              value={/^#[0-9a-fA-F]{6}$/.test(color.hex) ? color.hex : '#000000'}
+              onChange={(event) => setColor({ token: 'custom', hex: event.currentTarget.value })} />
+          </label>
+        </div>
+      </div>
 
       {/* Quick sizes + a slider for fine control. */}
       <div className="space-y-1.5">
