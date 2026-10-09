@@ -60,7 +60,6 @@ function EditorView() {
     <div className="h-dvh grid grid-rows-[auto_1fr] md:grid-rows-[auto_auto_1fr] grid-cols-[minmax(0,1fr)] md:grid-cols-[280px_minmax(0,1fr)_300px] overflow-hidden">
       <div className="col-span-full">
         <TopBar />
-        <div className="hidden md:flex items-center justify-end gap-3 border-b border-border bg-card px-3 py-1"><span className="text-xs text-muted-foreground">Cloud history and save status are available in the top bar.</span></div>
       </div>
       <div className="hidden md:block col-span-full">
         <ToolBar />
