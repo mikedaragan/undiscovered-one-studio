@@ -6,6 +6,7 @@ import { useWorkspaceStore } from '@/store/useWorkspaceStore'
 import { useFileStore } from '@/store/useFileStore'
 import { useRouterStore } from '@/store/useRouterStore'
 import { History, X } from 'lucide-react'
+import { simulateConflictRecovery } from './conflictRecovery'
 
 export function CloudHistory() {
  const session=useStudioSession()
@@ -16,6 +17,7 @@ export function CloudHistory() {
  const [busy,setBusy]=useState(false)
  const [error,setError]=useState('')
  const [label,setLabel]=useState('')
+ const [simulation,setSimulation]=useState('')
  const designId=session&&fileId?getStudioCloudDesignId(session.artistId,fileId):undefined
  const load=async()=>{if(!session||!designId)return;setBusy(true);setError('');try{setVersions(await listStudioVersions(session,designId))}catch(e){setError(String(e))}finally{setBusy(false)}}
  useEffect(()=>{if(open)void load()},[open,designId])
@@ -46,6 +48,7 @@ export function CloudHistory() {
     {!designId?<p className="text-sm">Waiting for this design's first cloud save. Try reopening after saving.</p>:<>
      <div className="flex gap-2 mb-3"><input className="min-w-0 flex-1 border rounded px-2 py-1 bg-background text-sm" value={label} onChange={e=>setLabel(e.target.value)} placeholder="Checkpoint name"/><button className="bg-primary text-primary-foreground rounded px-3 py-1 text-sm" disabled={busy||cloud.status==='saving'} onClick={()=>void checkpoint()}>Save checkpoint</button></div>
      <button className="text-xs underline mb-2" onClick={()=>void load()} disabled={busy}>Refresh history</button>
+     {import.meta.env.DEV&&<div className="mb-3 border rounded p-2 text-xs"><button className="underline" onClick={()=>{void simulateConflictRecovery().then(r=>setSimulation(r.passed?'PASS: '+r.details:'FAIL')).catch(e=>setSimulation('FAIL: '+String(e)))}}>Run safe conflict simulation</button>{simulation&&<p role="status" className="mt-1">{simulation}</p>}<p className="text-muted-foreground mt-1">Local-only simulation. No network requests or design changes.</p></div>}
      {error&&<p role="alert" className="text-destructive text-sm">{error}</p>}
      {versions.length===0?<p className="text-sm text-muted-foreground">No cloud snapshots yet.</p>:versions.map(v=><div key={v.id} className="flex gap-3 items-center justify-between border-t py-2"><div className="min-w-0"><div className="font-medium text-sm truncate">{v.label||'Version '+v.version_number}</div><div className="text-xs text-muted-foreground">{new Date(v.created_at).toLocaleString()} · {v.reason}</div></div><button disabled={busy||cloud.status==='saving'} onClick={()=>void restore(v)} className="shrink-0 text-sm underline">Restore</button></div>)}
     </>}
