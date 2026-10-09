@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react'
-import { Pen, Highlighter, Eraser } from 'lucide-react'
+import { Pen, Highlighter, Eraser, Palette } from 'lucide-react'
 import { useDesignStore } from '@/store/useDesignStore'
 import { useUIStore } from '@/store/useUIStore'
 import { getBrandColor } from '@/brand/palette'
@@ -89,6 +89,21 @@ export function DrawQuickBar() {
                   />
                 )
               })}
+              <label
+                className={`relative flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-white shadow-sm ring-1 ${color.token === 'custom' ? 'ring-primary' : 'ring-black/20'}`}
+                style={{ background: color.token === 'custom' ? color.hex : 'conic-gradient(#ef3737, #ffb051, #78d55c, #00a896, #4361d9, #ad50d9, #ef3737)' }}
+                title="Custom colour — open your device's colour picker"
+                aria-label="Custom colour"
+              >
+                <Palette className="pointer-events-none h-4 w-4 text-white drop-shadow" />
+                <input
+                  type="color"
+                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                  aria-label="Choose custom drawing colour"
+                  value={/^#[0-9a-fA-F]{6}$/.test(color.hex) ? color.hex : '#000000'}
+                  onChange={(event) => setColor({ token: 'custom', hex: event.currentTarget.value })}
+                />
+              </label>
               <div className="mx-0.5 h-5 w-px shrink-0 bg-border" />
               {sizes.map((sz) => {
                 const active = Math.round(width) === sz
