@@ -18,7 +18,7 @@ import type { TextLayer, ImageLayer, ShapeLayer, SvgLayer, GradientLayer, DrawLa
  * The properties inspector for the active layer. Shared by the desktop right
  * sidebar and the mobile property bottom sheet.
  */
-export function LayerInspector({ layer }: { layer: Layer }) {
+export function LayerInspector({ layer, mobileSection }: { layer: Layer; mobileSection?: 'style' | 'layout' | 'effects' }) {
   const isPro = useIsProMode()
 
   // Figma-style hierarchy: geometry and layout first (they're universal to every
@@ -26,11 +26,14 @@ export function LayerInspector({ layer }: { layer: Layer }) {
   // content (typography, fill…), then effects last.
   return (
     <>
+      {(!mobileSection || mobileSection === 'layout') && <>
       <AlignmentPanel />
       {layer.type !== 'background' && <PositionSizePanel layer={layer} />}
       <AutoLayoutSection layer={layer} />
-      <LayerTypeInspector layer={layer} />
-      {isPro && layer.type !== 'background' && <EffectsPanel layer={layer} />}
+      </>}
+      {(!mobileSection || mobileSection === 'style') && <LayerTypeInspector layer={layer} />}
+      {(!mobileSection || mobileSection === 'effects') && isPro && layer.type !== 'background' && <EffectsPanel layer={layer} />}
+      {mobileSection === 'effects' && !isPro && <p className="py-4 text-sm text-muted-foreground">Advanced effects are unavailable in this editing mode.</p>}
     </>
   )
 }
