@@ -16,6 +16,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { useRouterStore } from '@/store/useRouterStore'
 import { useStudioBridge } from '@/hooks/useStudioBridge'
 import { StudioAuthGate } from '@/components/auth/StudioAuthGate'
+import { StudioCloudSync } from '@/cloud/StudioCloudSync'
 import { installAgentRpc } from '@/agent/rpc'
 import { useEffect } from 'react'
 import { useDesignStore } from '@/store/useDesignStore'
@@ -91,6 +92,7 @@ function AuthorizedStudio() {
   useEffect(() => installAgentRpc(), [])
   return (
     <TooltipProvider>
+      <StudioCloudSync />
       {/* vaul scales this wrapper back (and rounds its corners) when a sheet opens,
           revealing the dark #root behind it — the iOS "page pushed back" depth. */}
       <div data-vaul-drawer-wrapper="" className="bg-background">
