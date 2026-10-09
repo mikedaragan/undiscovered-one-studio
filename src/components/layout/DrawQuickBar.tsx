@@ -6,7 +6,7 @@ import { getBrandColor } from '@/brand/palette'
 import { haptic } from '@/lib/haptics'
 
 // A curated quick palette — the full picker still lives in the sidebar panel.
-const SWATCHES = ['charcoal', 'brand-primary', 'red', 'green', 'orange', 'gold-300']
+const SWATCHES = ['charcoal', 'brand-primary', 'red', 'green', 'orange']
 const PEN_SIZES = [3, 6, 12, 24]
 const MARKER_SIZES = [12, 22, 40, 64]
 
