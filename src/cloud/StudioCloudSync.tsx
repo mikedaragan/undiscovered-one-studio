@@ -74,18 +74,19 @@ export function StudioCloudSync() {
      } catch(error) {
       if(isStudioConflict(error)){
        blocked.add(id)
-       const recovery=makeConflictRecovery(file)
-       try {
+       const now=new Date().toISOString()
+       const recovery=makeConflictRecovery(file,now)
+       try{
         const preserved=await createStudioDesign(session,recovery)
         mapping[recovery.id]=preserved.id
         remoteTimestamps.set(recovery.id,preserved.updated_at)
         fingerprints.set(recovery.id,JSON.stringify({name:recovery.name,pages:recovery.pages,folderId:recovery.folderId}))
         saveMapping()
         if(!disposed)useFileStore.setState(s=>({files:[...s.files,recovery]}))
-        if(!disposed)emit({status:'error',error:'Conflict detected. Your edits were saved separately as '+recovery.name+'. Open that copy in Files.'})
-       }catch(recoveryError){
+        if(!disposed)emit({status:'error',error:'A conflict occurred. Both designs are preserved. Open Files to compare the original and recovery copy.'})
+       }catch{
         if(!disposed)useFileStore.setState(s=>({files:[...s.files,recovery]}))
-        if(!disposed)emit({status:'error',error:'Conflict detected. A local recovery copy was created, but its cloud upload failed. Do not clear browser data.'})
+        if(!disposed)emit({status:'error',error:'Cloud conflict. A local recovery copy was created, but its upload failed.'})
        }
        continue
       }
