@@ -25,6 +25,7 @@ export function MobileTextEditor() {
   const [value, setValue] = useState('')
   const [tab, setTab] = useState<'text' | 'style'>('text')
   const [keyboardInset, setKeyboardInset] = useState(0)
+  const active = coarse && !!editingId && layer?.type === 'text'
 
   // iOS Safari can keep the layout viewport tall while the keyboard shrinks
   // the visual viewport. Lift the sheet above that obscured area.
@@ -42,7 +43,6 @@ export function MobileTextEditor() {
     }
   }, [active])
 
-  const active = coarse && !!editingId && layer?.type === 'text'
 
   useEffect(() => {
     if (!active || !layer) return
