@@ -6,7 +6,7 @@ import { LayoutPicker } from '@/components/panels/LayoutPicker'
 import { measureImportedSvg } from '@/engine/svgMeasure'
 import { useDesignStore, createTextLayer } from '@/store/useDesignStore'
 import { getBrandColor } from '@/brand/palette'
-import { MousePointer2, Type, Square, ImageIcon, Pencil, Copy, Trash2, MoreHorizontal, Hand, Circle, Triangle, Star, Minus, ArrowRight, Palette, FileCode, MessageCircle, LayoutGrid, LayoutTemplate } from 'lucide-react'
+import { MousePointer2, Type, Square, Layers, ImageIcon, Pencil, Copy, Trash2, MoreHorizontal, Hand, Circle, Triangle, Star, Minus, ArrowRight, Palette, FileCode, MessageCircle, LayoutGrid, LayoutTemplate } from 'lucide-react'
 import { haptic } from '@/lib/haptics'
 import type { ComponentType } from 'react'
 
@@ -73,6 +73,7 @@ export function FloatingToolbar() {
   const addLayer = useDesignStore((s) => s.addLayer)
   const selectedCount = useDesignStore((s) => s.selectedLayerIds.size)
   const [moreOpen, setMoreOpen] = useState(false)
+  const [shapesOpen, setShapesOpen] = useState(false)
   const [templatesOpen, setTemplatesOpen] = useState(false)
   const [layoutsOpen, setLayoutsOpen] = useState(false)
 
@@ -97,12 +98,9 @@ export function FloatingToolbar() {
       <IconButton icon={MousePointer2} label="Select (V)" active={tool === 'select'} onClick={() => setTool('select')} />
       <IconButton icon={Pencil} label="Draw (P)" active={tool === 'draw'} onClick={() => setTool(tool === 'draw' ? 'select' : 'draw')} />
       <IconButton icon={Type} label="Text (T)" onClick={() => addLayer(createTextLayer())} />
-      <IconButton
-        icon={Square}
-        label="Shape (R)"
-        onClick={() => addLayer({ type: 'shape', name: 'Rectangle', visible: true, locked: false, opacity: 1, x: 100, y: 100, width: 200, height: 200, rotation: 0, shape: 'rectangle', fill: getBrandColor('brand-dark'), borderRadius: 7 })}
-      />
+      <IconButton icon={Square} label="Shapes" active={shapesOpen} onClick={() => setShapesOpen(true)} />
       <IconButton icon={ImageIcon} label="Image" onClick={addImageViaPicker} />
+      <IconButton icon={Layers} label="Layers" onClick={() => window.dispatchEvent(new Event('studio:open-mobile-layers'))} />
       <div className="md:hidden"><IconButton icon={MoreHorizontal} label="More tools" active={moreOpen} onClick={() => setMoreOpen(true)} /></div>
 
       {/* Contextual actions — spring in only when there's a selection. On mobile
@@ -124,6 +122,36 @@ export function FloatingToolbar() {
         )}
       </AnimatePresence>
     </motion.div>
+    <Drawer open={shapesOpen} onOpenChange={setShapesOpen}>
+      <DrawerContent className="md:hidden max-h-[80dvh]">
+        <div className="flex items-center justify-between px-4 pb-3">
+          <DrawerTitle className="text-base font-semibold">Shapes</DrawerTitle>
+          <DrawerClose asChild><button className="min-h-11 rounded-full bg-muted px-4 text-sm">Done</button></DrawerClose>
+        </div>
+        <div className="grid grid-cols-3 gap-2 overflow-y-auto px-4 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
+          {[
+            { label: 'Rectangle', icon: Square, shape: 'rectangle' },
+            { label: 'Circle', icon: Circle, shape: 'ellipse' },
+            { label: 'Triangle', icon: Triangle, shape: 'triangle' },
+            { label: 'Star', icon: Star, shape: 'star' },
+            { label: 'Line', icon: Minus, shape: 'line' },
+            { label: 'Arrow', icon: ArrowRight, shape: 'line' },
+          ].map((item) => <button key={item.label} type="button"
+            className="flex min-h-20 flex-col items-center justify-center gap-2 rounded-xl border border-border bg-card p-3 text-sm active:bg-muted"
+            onClick={() => {
+              setShapesOpen(false)
+              addLayer({ type: 'shape', name: item.label, visible: true, locked: false, opacity: 1,
+                x: 100, y: 100, width: 200, height: item.shape === 'line' ? 0 : 200, rotation: 0,
+                shape: item.shape, fill: getBrandColor('brand-dark'), borderRadius: item.shape === 'rectangle' ? 7 : 0,
+                ...(item.shape === 'line' ? { stroke: { color: getBrandColor('charcoal'), width: 3 }, lineCap: 'round' } : {}),
+                ...(item.label === 'Arrow' ? { arrowEnd: true } : {}),
+              })
+            }}>
+            <item.icon className="h-6 w-6 text-primary" /><span>{item.label}</span>
+          </button>)}
+        </div>
+      </DrawerContent>
+    </Drawer>
     <Drawer open={moreOpen} onOpenChange={setMoreOpen}>
       <DrawerContent className="md:hidden max-h-[85dvh]">
         <div className="flex items-center justify-between px-4 pb-3">
@@ -136,14 +164,7 @@ export function FloatingToolbar() {
               { label: 'Pan canvas', icon: Hand, run: () => setTool('pan') },
               { label: 'Comments', icon: MessageCircle, run: () => setTool('comment') },
             ] },
-            { heading: 'Shapes and effects', actions: [
-              ...[
-                { label: 'Circle', icon: Circle, shape: 'ellipse' },
-                { label: 'Triangle', icon: Triangle, shape: 'triangle' },
-                { label: 'Star', icon: Star, shape: 'star' },
-                { label: 'Line', icon: Minus, shape: 'line' },
-                { label: 'Arrow', icon: ArrowRight, shape: 'line' },
-              ].map((item) => ({ label: item.label, icon: item.icon, run: () => addLayer({ type: 'shape', name: item.label, visible: true, locked: false, opacity: 1, x: 100, y: 100, width: 200, height: item.shape === 'line' ? 0 : 200, rotation: 0, shape: item.shape, fill: getBrandColor('brand-dark'), borderRadius: 0, ...(item.shape === 'line' ? { stroke: { color: getBrandColor('charcoal'), width: 3 }, lineCap: 'round' } : {}), ...(item.label === 'Arrow' ? { arrowEnd: true } : {}) }) })),
+            { heading: 'Effects', actions: [
               { label: 'Gradient', icon: Palette, run: () => addLayer({ type: 'gradient', name: 'Gradient', visible: true, locked: false, opacity: 1, x: 50, y: 50, width: 500, height: 300, rotation: 0, gradientType: 'linear', angle: 135, grain: 0.1, borderRadius: 0, stops: [{ position: 0, oklchL: 0.55, oklchC: 0.2, oklchH: 265, alpha: 1 }, { position: 1, oklchL: 0.35, oklchC: 0.15, oklchH: 280, alpha: 1 }] }) },
             ] },
             { heading: 'Assets and layouts', actions: [
