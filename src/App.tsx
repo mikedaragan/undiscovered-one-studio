@@ -18,9 +18,32 @@ import { useStudioBridge } from '@/hooks/useStudioBridge'
 import { StudioAuthGate } from '@/components/auth/StudioAuthGate'
 import { StudioCloudSync } from '@/cloud/StudioCloudSync'
 import { installAgentRpc } from '@/agent/rpc'
-import { useEffect } from 'react'
+import { Component, useEffect, type ErrorInfo, type ReactNode } from 'react'
 import { useDesignStore } from '@/store/useDesignStore'
 import { useWorkspaceStore } from '@/store/useWorkspaceStore'
+
+class StudioRenderBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false }
+
+  static getDerivedStateFromError() {
+    return { failed: true }
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('Graphic Studio rendering failed', error, info.componentStack)
+  }
+
+  render() {
+    if (this.state.failed) return (
+      <main className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background p-6 text-center text-foreground">
+        <h1 className="text-xl font-semibold">Graphic Studio couldn't display this view</h1>
+        <p className="max-w-sm text-sm text-muted-foreground">Your saved designs have not been deleted. Try reloading the Studio from Creators Dashboard.</p>
+        <button className="rounded-lg bg-primary px-5 py-3 font-medium text-primary-foreground" onClick={() => window.location.reload()}>Reload Studio</button>
+      </main>
+    )
+    return this.props.children
+  }
+}
 
 function EditorView() {
   useKeyboardShortcuts()
@@ -80,9 +103,11 @@ function EditorView() {
 export default function App() {
 
   return (
-    <StudioAuthGate>
-      <AuthorizedStudio />
-    </StudioAuthGate>
+    <StudioRenderBoundary>
+      <StudioAuthGate>
+        <AuthorizedStudio />
+      </StudioAuthGate>
+    </StudioRenderBoundary>
   )
 }
 
