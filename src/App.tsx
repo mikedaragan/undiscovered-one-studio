@@ -59,12 +59,12 @@ function EditorView() {
   }, [])
 
   return (
-    <div className="h-dvh grid grid-rows-[auto_auto_1fr] grid-cols-[minmax(0,1fr)] md:grid-cols-[280px_minmax(0,1fr)_300px] overflow-hidden">
+    <div className="h-dvh grid grid-rows-[auto_1fr] md:grid-rows-[auto_auto_1fr] grid-cols-[minmax(0,1fr)] md:grid-cols-[280px_minmax(0,1fr)_300px] overflow-hidden">
       <div className="col-span-full">
         <TopBar />
-        <div className="flex items-center justify-end gap-3 border-b border-border bg-card px-3 py-1"><CloudHistory /><div role="status" aria-live="polite" className="text-xs text-muted-foreground">{cloud.status === 'saving' ? 'Saving to cloud…' : cloud.status === 'ready' ? 'Cloud connected' : cloud.status === 'error' ? `Cloud save issue: ${cloud.error}` : 'Connecting cloud…'}</div></div>
+        <div className="flex items-center justify-end gap-3 border-b border-border bg-card px-3 py-1"><CloudHistory /><div role="status" aria-live="polite" className="text-xs text-muted-foreground">{cloud.status === 'saving' ? 'Saving to cloud…' : cloud.status === 'ready' ? 'All changes saved' : cloud.status === 'error' ? `Cloud save issue: ${cloud.error}` : 'Connecting cloud…'}</div></div>
       </div>
-      <div className="col-span-full">
+      <div className="hidden md:block col-span-full">
         <ToolBar />
       </div>
       <LeftSidebar />
