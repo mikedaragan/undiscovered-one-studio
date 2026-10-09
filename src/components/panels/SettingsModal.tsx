@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useUIStore, type AppMode } from '@/store/useUIStore'
+import { useUIStore } from '@/store/useUIStore'
 import { useAIStore } from '@/store/useAIStore'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { Drawer, DrawerContent, DrawerTitle, DrawerClose } from '@/components/ui/drawer'
@@ -14,8 +14,6 @@ import {
   Wand2,
   Palette,
   Mouse,
-  Sparkles,
-  Shield,
 } from 'lucide-react'
 
 type SettingsTab = 'general' | 'ai' | 'canvas' | 'appearance'
@@ -125,71 +123,12 @@ export function SettingsModal() {
 }
 
 function GeneralSettings() {
-  const appMode = useUIStore((s) => s.appMode)
-  const setAppMode = useUIStore((s) => s.setAppMode)
-
   return (
     <div className="space-y-6">
-      {/* Mode selector */}
-      <div className="space-y-3">
-        <label className="text-[14px] font-medium text-foreground">Editor Mode</label>
-        <p className="text-[13px] text-muted-foreground">Choose the level of control you want.</p>
-
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            className={`
-              p-4 rounded-[7px] border-2 text-left transition-[border-color,background-color] cursor-pointer
-              ${appMode === 'basic'
-                ? 'border-primary bg-primary/5'
-                : 'border-border hover:border-border/80'}
-            `}
-            onClick={() => setAppMode('basic')}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <Shield className="w-5 h-5 text-primary" />
-              <span className="text-[14px] font-semibold">Basic</span>
-            </div>
-            <p className="text-[12px] text-muted-foreground leading-relaxed">
-              Helps you make something that looks good — fewer options, and it keeps things tidy for you.
-            </p>
-            <ul className="mt-3 space-y-1 text-[11px] text-muted-foreground/70">
-              <li>Brand colours only</li>
-              <li>Text sizes that fit together</li>
-              <li>Everything lines up on its own</li>
-              <li>Just the essentials</li>
-            </ul>
-          </button>
-
-          <button
-            className={`
-              p-4 rounded-[7px] border-2 text-left transition-[border-color,background-color] cursor-pointer
-              ${appMode === 'pro'
-                ? 'border-primary bg-primary/5'
-                : 'border-border hover:border-border/80'}
-            `}
-            onClick={() => setAppMode('pro')}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              <span className="text-[14px] font-semibold">Pro</span>
-            </div>
-            <p className="text-[12px] text-muted-foreground leading-relaxed">
-              The full toolset with complete control — for when you know what you're doing.
-            </p>
-            <ul className="mt-3 space-y-1 text-[11px] text-muted-foreground/70">
-              <li>Any colour, custom picker</li>
-              <li>Any text size &amp; spacing</li>
-              <li>Gradients, shadows &amp; effects</li>
-              <li>Every tool &amp; layer type</li>
-            </ul>
-          </button>
-        </div>
-      </div>
-
       {/* Auto-save */}
       <div className="space-y-2">
         <label className="text-[14px] font-medium text-foreground">Auto-Save</label>
-        <p className="text-[13px] text-muted-foreground">Your work is automatically saved to your browser.</p>
+        <p className="text-[13px] text-muted-foreground">Your work is saved locally as you edit. Signed-in creator designs also sync to the cloud when connected.</p>
         <div className="flex items-center gap-2 text-[12px] text-muted-foreground/60">
           <div className="w-2 h-2 rounded-full bg-green-500" />
           Auto-save enabled
@@ -199,13 +138,13 @@ function GeneralSettings() {
       {/* Data */}
       <div className="space-y-2">
         <label className="text-[14px] font-medium text-foreground">Data Storage</label>
-        <p className="text-[13px] text-muted-foreground">All data is stored locally in your browser. Nothing is sent to our servers.</p>
+        <p className="text-[13px] text-muted-foreground">This device stores local drafts and preferences. Eligible designs are also synced to your creator account in the cloud.</p>
         <Button
           variant="outline"
           size="sm"
           className="rounded-[5px]"
           onClick={() => {
-            if (confirm('This will clear all projects, designs, and settings. Are you sure?')) {
+            if (confirm('Clear Studio data stored in this browser? This does not delete cloud designs, but local-only drafts and settings may be lost.')) {
               // Only clear this app's own keys — the Ads Creator runs as a
               // same-origin iframe inside a host app, so localStorage.clear() would
               // wipe the host app's data too.
@@ -277,14 +216,8 @@ function CanvasSettings() {
 
   return (
     <div className="space-y-6">
-      {!isPro && (
-        <p className="text-[13px] text-muted-foreground leading-relaxed">
-          Basic keeps things tidy for you — layers line up and space themselves automatically. Switch to Pro on the General tab for full control.
-        </p>
-      )}
-
       {/* Snapping is always on in Basic (a guardrail), so these toggles are Pro-only. */}
-      {isPro && (
+      {(
         <div className="space-y-4">
           <h3 className="text-[14px] font-medium text-foreground">Snapping</h3>
 
@@ -304,7 +237,7 @@ function CanvasSettings() {
         </div>
       )}
 
-      {isPro && (
+      {(
         <div className="border-t border-border pt-6 space-y-4">
           <h3 className="text-[14px] font-medium text-foreground">Nudge</h3>
           <p className="text-[12px] text-muted-foreground">How far arrow keys move a selection. Hold Shift for the large amount.</p>
@@ -315,7 +248,7 @@ function CanvasSettings() {
         </div>
       )}
 
-      {isPro && (
+      {(
         <div className="border-t border-border pt-6 space-y-4">
           <h3 className="text-[14px] font-medium text-foreground">Defaults</h3>
           <p className="text-[12px] text-muted-foreground">Default settings for new elements.</p>
