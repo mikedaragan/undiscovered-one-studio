@@ -86,3 +86,49 @@ export async function deleteCloudDesign(auth: StudioCredentials, designId: strin
   const response = await fetch(url, { method: 'DELETE', headers: headers(auth) })
   if (!response.ok) throw new Error(`Unable to delete design (${response.status})`)
 }
+
+/** Immutable cloud history. Requires a genuine Supabase user session, not a handoff ticket. */
+export type CloudDesignVersion = {
+  id: string
+  design_id: string
+  artist_id: string
+  version_number: number
+  title: string
+  document: DesignFile
+  created_by: string | null
+  created_at: string
+  label: string | null
+  protected: boolean
+  reason: 'initial' | 'autosave' | 'checkpoint' | 'restore'
+}
+
+export async function listCloudDesignVersions(auth: StudioCredentials, designId: string): Promise<CloudDesignVersion[]> {
+  const url = new URL(`${API}/creator_marketing_design_versions`)
+  url.searchParams.set('design_id', `eq.${designId}`)
+  url.searchParams.set('artist_id', `eq.${auth.artistId}`)
+  url.searchParams.set('select', 'id,design_id,artist_id,version_number,title,document,created_by,created_at,label,protected,reason')
+  url.searchParams.set('order', 'version_number.desc')
+  return responseJson<CloudDesignVersion[]>(await fetch(url, { headers: headers(auth), cache: 'no-store' }))
+}
+
+async function callDesignRpc<T>(auth: StudioCredentials, name: string, params: Record<string, unknown>): Promise<T> {
+  return responseJson<T>(await fetch(`${API}/rpc/${name}`, {
+    method: 'POST',
+    headers: headers(auth),
+    body: JSON.stringify(params),
+    cache: 'no-store',
+  }))
+}
+
+export function checkpointCloudDesign(auth: StudioCredentials, designId: string, label: string, protect = false): Promise<number> {
+  return callDesignRpc<number>(auth, 'checkpoint_creator_design', {
+    p_design_id: designId, p_label: label, p_protected: protect,
+  })
+}
+
+/** Restoring creates a new version; the old current design remains recoverable. */
+export function restoreCloudDesignVersion(auth: StudioCredentials, designId: string, versionNumber: number): Promise<number> {
+  return callDesignRpc<number>(auth, 'restore_creator_design_version', {
+    p_design_id: designId, p_version_number: versionNumber,
+  })
+}
