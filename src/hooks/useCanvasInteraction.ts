@@ -139,6 +139,7 @@ export function useCanvasInteraction(
       const coarse = typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches
       const slop = (coarse ? 20 : 7) / (zoom || 1)
 
+      const findHit = (margin: number): LayerId | null => {
       for (let i = layers.length - 1; i >= 0; i--) {
         const layer = layers[i]
         if (!layer.visible || layer.locked || layer.type === 'background') continue
@@ -169,20 +170,25 @@ export function useCanvasInteraction(
           const lx = (px - layer.x) / (sx || 1)
           const ly = (py - layer.y) / (sy || 1)
           const d = distToPolyline(lx, ly, layer.points)
-          if (d <= (layer.strokeWidth ?? 4) / 2 + slop / avg) return layer.id
+          if (d <= (layer.strokeWidth ?? 4) / 2 + margin / avg) return layer.id
           continue
         }
 
         if (
-          px >= layer.x - slop &&
-          px <= layer.x + layer.width + slop &&
-          py >= layer.y - slop &&
-          py <= layer.y + layer.height + slop
+          px >= layer.x - margin &&
+          px <= layer.x + layer.width + margin &&
+          py >= layer.y - margin &&
+          py <= layer.y + layer.height + margin
         ) {
           return layer.id
         }
       }
       return null
+      }
+      // First honor the actual painted geometry. Only fall back to a generous
+      // finger-sized target when nothing is directly beneath the tap.
+      // Otherwise a nearby upper layer steals taps from the intended object.
+      return findHit(0) ?? findHit(slop)
     },
     [],
   )
