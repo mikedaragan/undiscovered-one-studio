@@ -46,6 +46,8 @@ export function StudioCloudSync() {
   if(!session)return
   let disposed=false,working=false,dirty=false,ready=false
   let timer: ReturnType<typeof setTimeout>|undefined
+  let retryTimer: ReturnType<typeof setTimeout>|undefined
+  let retryAttempts=0
   const scope=`uo-studio-cloud-map:${session.artistId}`
   let mapping:Record<string,string>={}
   try { mapping=JSON.parse(localStorage.getItem(scope)??'{}') as Record<string,string> } catch { mapping={} }
@@ -55,6 +57,11 @@ export function StudioCloudSync() {
   const blocked=new Set<string>()
   let activeConflict:DesignConflict|null=null
   const saveMapping=()=>localStorage.setItem(scope,JSON.stringify(mapping))
+  const retry=()=>{
+   if(disposed||retryTimer||!navigator.onLine)return
+   const delay=Math.min(60000,3000*2**Math.min(retryAttempts++,4))
+   retryTimer=setTimeout(()=>{retryTimer=undefined;void flush()},delay)
+  }
   const schedule=(id:string)=>{
    if(!ready||disposed||id==='scratchpad')return
    if(blocked.has(id))return
@@ -98,13 +105,16 @@ export function StudioCloudSync() {
      const latest=useFileStore.getState().getFile(id)
      if(latest&&JSON.stringify({name:latest.name,pages:latest.pages,folderId:latest.folderId})!==fingerprint)queue.add(id)
     }
+    retryAttempts=0
     if(!disposed&&blocked.size===0)emit({status:'ready'})
    }catch(error){
     dirty=true
     if(!disposed)emit({status:'error',error:error instanceof Error?error.message:'Cloud save failed'})
-    // Wait for a subsequent edit or explicit flush; never retry-loop on auth failure.
+    if(!(error instanceof Error && /401|403|unauthorized|forbidden/i.test(error.message)))retry()
    }finally{working=false}
   }
+  const onReconnect=()=>{if(ready&&queue.size){dirty=true;void flush()}}
+  window.addEventListener('online',onReconnect)
   const init=async()=>{
    try{
     const cloud=await listStudioDesigns(session)
@@ -188,7 +198,7 @@ export function StudioCloudSync() {
   }
   setResolveHandler(()=>handleChoice)
   void init()
-  return()=>{disposed=true;unsubFiles();unsubWorkspace();if(timer)clearTimeout(timer)}
+  return()=>{disposed=true;unsubFiles();unsubWorkspace();if(timer)clearTimeout(timer);if(retryTimer)clearTimeout(retryTimer);window.removeEventListener('online',onReconnect)}
  },[session])
  return conflict?<ConflictDialog conflict={conflict} busy={resolving} error={resolutionError} onChoose={choice=>{void resolveHandler?.(choice)}}/>:null
 }
