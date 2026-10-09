@@ -15,6 +15,9 @@ import { useRouterStore, type Route } from '@/store/useRouterStore'
  */
 
 const SOURCE = 'tela-canvas'
+const UI_SOURCE = 'undiscovered-one-studio-ui'
+type Section = 'files' | 'recents' | 'templates'
+const isSection = (value: unknown): value is Section => value === 'files' || value === 'recents' || value === 'templates'
 const TRUSTED_PARENT_ORIGIN = 'https://creators.undiscoveredone.com'
 type View = 'editor' | 'files'
 
@@ -41,6 +44,7 @@ export function useStudioBridge() {
     }
     if (route.page === 'editor') message.designId = route.designId
     window.parent.postMessage(message, TRUSTED_PARENT_ORIGIN)
+    window.parent.postMessage({ source: UI_SOURCE, version: 1, type: 'state', view: view === 'files' ? 'home' : 'editor', ...(view === 'files' ? { section: 'files' } : {}) }, TRUSTED_PARENT_ORIGIN)
   }, [route])
 
   // parent → child: apply a view the host asks for.
@@ -49,7 +53,14 @@ export function useStudioBridge() {
     function onMessage(e: MessageEvent) {
       if (e.origin !== TRUSTED_PARENT_ORIGIN || e.source !== window.parent) return
       const data = e.data
-      if (!data || data.source !== SOURCE || data.type !== 'show') return
+      if (!data || typeof data !== 'object') return
+      if (data.source === UI_SOURCE && data.version === 1 && (data.type === 'configure' || data.type === 'navigate')) {
+        if (!isSection(data.section)) return
+        useRouterStore.getState().navigate({ page: 'library' })
+        window.dispatchEvent(new CustomEvent('uo-studio-library-section', { detail: data.section }))
+        return
+      }
+      if (data.source !== SOURCE || data.type !== 'show') return
       const { navigate } = useRouterStore.getState()
       if (data.view === 'files') navigate({ page: 'library' })
       else navigate({ page: 'editor-standalone' })
