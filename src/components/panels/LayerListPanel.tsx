@@ -63,6 +63,7 @@ export function LayerListPanel() {
   const pushSnapshot = useDesignStore((s) => s.pushSnapshot)
 
   const reorderLayer = useDesignStore((s) => s.reorderLayer)
+  const reorderSelection = useDesignStore((s) => s.reorderSelection)
 
   const [collapsedFrames, setCollapsedFrames] = useState<Set<string>>(new Set())
   const [collapsedPages, setCollapsedPages] = useState<Set<string>>(new Set())
@@ -174,11 +175,13 @@ export function LayerListPanel() {
             isActive={activeLayerId === layer.id}
             onSelect={(e) => selectLayer(layer.id, e.shiftKey)}
             onContextMenu={(e) => openLayerMenu(e, layer)}
-            onVisibility={() => updateLayer(layer.id, { visible: !layer.visible })}
-            onLock={() => updateLayer(layer.id, { locked: !layer.locked })}
+            onVisibility={() => { pushSnapshot(); updateLayer(layer.id, { visible: !layer.visible }) }}
+            onLock={() => { pushSnapshot(); updateLayer(layer.id, { locked: !layer.locked }) }}
             onDuplicate={layer.type !== 'background' ? () => duplicateLayer(layer.id) : undefined}
             onDelete={layer.type !== 'background' ? () => removeLayer(layer.id) : undefined}
             reorderEnabled={canReorder}
+            onMoveForward={canReorder ? () => reorderSelection([layer.id], 'forward') : undefined}
+            onMoveBackward={canReorder ? () => reorderSelection([layer.id], 'backward') : undefined}
             isDragging={dragLayerId === layer.id}
             dropPos={dropTarget?.id === layer.id ? dropTarget.pos : null}
             onDragStartLayer={canReorder ? () => setDragLayerId(layer.id) : undefined}
@@ -222,8 +225,8 @@ export function LayerListPanel() {
               isActive={activeLayerId === layer.id}
               onSelect={(e) => selectLayer(layer.id, e.shiftKey)}
               onContextMenu={(e) => openLayerMenu(e, layer)}
-              onVisibility={() => updateLayer(layer.id, { visible: !layer.visible })}
-              onLock={() => updateLayer(layer.id, { locked: !layer.locked })}
+              onVisibility={() => { pushSnapshot(); updateLayer(layer.id, { visible: !layer.visible }) }}
+              onLock={() => { pushSnapshot(); updateLayer(layer.id, { locked: !layer.locked }) }}
               onDuplicate={layer.type !== 'background' ? () => duplicateLayer(layer.id) : undefined}
               onDelete={layer.type !== 'background' ? () => removeLayer(layer.id) : undefined}
               reorderEnabled={false}
@@ -433,6 +436,8 @@ function LayerRow({
   onDropLayer,
   onDragEndLayer,
   onContextMenu,
+  onMoveForward,
+  onMoveBackward,
   rename,
 }: {
   layer: any
@@ -452,6 +457,8 @@ function LayerRow({
   onDropLayer?: () => void
   onDragEndLayer?: () => void
   onContextMenu?: (e: React.MouseEvent) => void
+  onMoveForward?: () => void
+  onMoveBackward?: () => void
   rename?: {
     editing: boolean
     value: string
@@ -465,7 +472,7 @@ function LayerRow({
 
   return (
     <div
-      draggable={reorderEnabled}
+      draggable={reorderEnabled && typeof window !== 'undefined' && !window.matchMedia('(pointer: coarse)').matches}
       onDragStart={reorderEnabled ? (e) => { e.dataTransfer.effectAllowed = 'move'; onDragStartLayer?.() } : undefined}
       onDragOver={onDragOverLayer ? (e) => {
         e.preventDefault()
@@ -515,6 +522,9 @@ function LayerRow({
           onClick={(e) => { e.stopPropagation(); onLock() }} aria-label={layer.locked ? 'Unlock layer' : 'Lock layer'}>
           {layer.locked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
         </button>
+        {onMoveForward && <button className="flex h-10 w-9 items-center justify-center rounded-md text-muted-foreground md:hidden" onClick={(e) => { e.stopPropagation(); onMoveForward() }} aria-label="Bring layer forward" title="Bring forward"><ArrowUp className="h-4 w-4" /></button>}
+        {onMoveBackward && <button className="flex h-10 w-9 items-center justify-center rounded-md text-muted-foreground md:hidden" onClick={(e) => { e.stopPropagation(); onMoveBackward() }} aria-label="Send layer backward" title="Send backward"><ArrowDown className="h-4 w-4" /></button>}
+        {rename && !rename.editing && <button className="flex h-10 w-9 items-center justify-center rounded-md text-muted-foreground md:hidden" onClick={(e) => { e.stopPropagation(); rename.onStart() }} aria-label="Rename layer"><Pencil className="h-4 w-4" /></button>}
         {onDuplicate && (
           <button className="p-2 md:p-0.5 hover:bg-muted rounded-[3px] text-muted-foreground/50 hover:text-muted-foreground cursor-pointer"
             onClick={(e) => { e.stopPropagation(); onDuplicate() }} aria-label="Duplicate layer">
