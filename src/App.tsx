@@ -17,6 +17,7 @@ import { useRouterStore } from '@/store/useRouterStore'
 import { useStudioBridge } from '@/hooks/useStudioBridge'
 import { StudioAuthGate } from '@/components/auth/StudioAuthGate'
 import { StudioCloudSync, useCloudSaveStatus } from '@/cloud/StudioCloudSync'
+import { CloudHistory } from '@/cloud/CloudHistory'
 import { installAgentRpc } from '@/agent/rpc'
 import { useEffect } from 'react'
 import { useDesignStore } from '@/store/useDesignStore'
@@ -61,7 +62,7 @@ function EditorView() {
     <div className="h-dvh grid grid-rows-[auto_auto_1fr] grid-cols-[minmax(0,1fr)] md:grid-cols-[280px_minmax(0,1fr)_300px] overflow-hidden">
       <div className="col-span-full">
         <TopBar />
-        <div role="status" aria-live="polite" className="absolute right-3 top-14 z-40 rounded-b bg-card px-2 py-1 text-xs text-muted-foreground shadow-sm">{cloud.status === 'saving' ? 'Saving to cloud…' : cloud.status === 'ready' ? 'Cloud connected' : cloud.status === 'error' ? `Cloud save issue: ${cloud.error}` : 'Connecting cloud…'}</div>
+        <div className="flex items-center justify-end gap-3 border-b border-border bg-card px-3 py-1"><CloudHistory /><div role="status" aria-live="polite" className="text-xs text-muted-foreground">{cloud.status === 'saving' ? 'Saving to cloud…' : cloud.status === 'ready' ? 'Cloud connected' : cloud.status === 'error' ? `Cloud save issue: ${cloud.error}` : 'Connecting cloud…'}</div></div>
       </div>
       <div className="col-span-full">
         <ToolBar />
