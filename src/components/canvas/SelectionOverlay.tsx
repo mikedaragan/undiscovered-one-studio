@@ -95,9 +95,9 @@ export function SelectionOverlay({ zoom, onResizeStart, onGroupResizeStart }: Pr
             {HANDLE_DEFS(w, h).map((handle, i) => (
               <motion.rect
                 key={handle.id}
-                x={handle.cx - HIT_SIZE / 2} y={handle.cy - HIT_SIZE / 2}
-                width={HIT_SIZE} height={HIT_SIZE}
-                fill="transparent" stroke="#0017c7" strokeWidth={1.5} rx={HANDLE_RX}
+                x={handle.cx - HANDLE_HALF} y={handle.cy - HANDLE_HALF}
+                width={HANDLE_SIZE} height={HANDLE_SIZE}
+                fill="#ffffff" stroke="#0017c7" strokeWidth={1.5} rx={HANDLE_RX}
                 className="pointer-events-auto"
                 style={{ cursor: handle.cursor, touchAction: 'none', transformBox: 'fill-box', transformOrigin: 'center' }}
                 initial={{ scale: 0, opacity: 0 }}
@@ -105,6 +105,12 @@ export function SelectionOverlay({ zoom, onResizeStart, onGroupResizeStart }: Pr
                 transition={{ type: 'spring', stiffness: 520, damping: 26, delay: 0.02 + i * 0.012 }}
                 onPointerDown={(e) => { e.stopPropagation(); onResizeStart(layer.id, handle.id, e) }}
               />
+            ))}
+            {coarse && HANDLE_DEFS(w, h).map((handle) => (
+              <rect key={`hit-${handle.id}`} x={handle.cx - HIT_SIZE / 2} y={handle.cy - HIT_SIZE / 2}
+                width={HIT_SIZE} height={HIT_SIZE} fill="transparent" className="pointer-events-auto"
+                style={{ touchAction: 'none', cursor: handle.cursor }}
+                onPointerDown={(e) => { e.stopPropagation(); onResizeStart(layer.id, handle.id, e) }} />
             ))}
           </g>
         )
@@ -137,12 +143,18 @@ export function SelectionOverlay({ zoom, onResizeStart, onGroupResizeStart }: Pr
               {HANDLE_DEFS(bw, bh).map((handle) => (
                 <rect
                   key={handle.id}
-                  x={handle.cx - HIT_SIZE / 2} y={handle.cy - HIT_SIZE / 2}
-                  width={HIT_SIZE} height={HIT_SIZE}
-                  fill="transparent" stroke="#0017c7" strokeWidth={1.5} rx={HANDLE_RX}
+                  x={handle.cx - HANDLE_HALF} y={handle.cy - HANDLE_HALF}
+                  width={HANDLE_SIZE} height={HANDLE_SIZE}
+                  fill="#ffffff" stroke="#0017c7" strokeWidth={1.5} rx={HANDLE_RX}
                   className="pointer-events-auto" style={{ cursor: handle.cursor, touchAction: 'none' }}
                   onPointerDown={(e) => { e.stopPropagation(); onGroupResizeStart(handle.id, e) }}
                 />
+              ))}
+              {coarse && HANDLE_DEFS(bw, bh).map((handle) => (
+                <rect key={`hit-${handle.id}`} x={handle.cx - HIT_SIZE / 2} y={handle.cy - HIT_SIZE / 2}
+                  width={HIT_SIZE} height={HIT_SIZE} fill="transparent" className="pointer-events-auto"
+                  style={{ touchAction: 'none', cursor: handle.cursor }}
+                  onPointerDown={(e) => { e.stopPropagation(); onGroupResizeStart(handle.id, e) }} />
               ))}
             </g>
           </>
