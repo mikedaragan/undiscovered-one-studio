@@ -21,7 +21,13 @@ const HANDLE_DEFS = (w: number, h: number) => [
   { id: 's', cx: w / 2, cy: h, cursor: 'ns-resize' },
   { id: 'sw', cx: 0, cy: h, cursor: 'nesw-resize' },
   { id: 'w', cx: 0, cy: h / 2, cursor: 'ew-resize' },
-]
+].filter((handle) => {
+  // On small on-screen objects, side grips collide with corner grips.
+  // Keep the four corners; preserve all eight on larger selections.
+  if (handle.id === 'n' || handle.id === 's') return w >= 76
+  if (handle.id === 'e' || handle.id === 'w') return h >= 76
+  return true
+})
 
 export function SelectionOverlay({ zoom, onResizeStart, onGroupResizeStart }: Props) {
   const selectedLayerIds = useDesignStore((s) => s.selectedLayerIds)
@@ -29,8 +35,8 @@ export function SelectionOverlay({ zoom, onResizeStart, onGroupResizeStart }: Pr
   const autoLayouts = useDesignStore((s) => s.document.autoLayouts)
   // Finger-friendly, circular handles on touch/pen; small squares on mouse.
   const coarse = useCoarsePointer()
-  const HANDLE_SIZE = coarse ? 18 : 8
-  const HIT_SIZE = coarse ? 36 : HANDLE_SIZE
+  const HANDLE_SIZE = coarse ? 10 : 8
+  const HIT_SIZE = coarse ? 32 : HANDLE_SIZE
   const HANDLE_HALF = HANDLE_SIZE / 2
   const HANDLE_RX = coarse ? HANDLE_HALF : 1
 
