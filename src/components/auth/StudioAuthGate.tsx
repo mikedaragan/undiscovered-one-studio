@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import { redeemStudioHandoff, type StudioHandoff } from '@/cloud/studioHandoff'
 
 const PARENT_ORIGIN = 'https://creators.undiscoveredone.com'
 const STUDIO_ORIGIN = 'https://studio.creators.undiscoveredone.com'
 const SOURCE = 'undiscovered-one-studio-auth'
+const StudioSessionContext = createContext<StudioHandoff | null>(null)
+export const useStudioSession = () => useContext(StudioSessionContext)
 type GateState = { status: 'waiting' | 'verifying' | 'authorized' | 'denied'; access?: StudioHandoff; message?: string }
 
 /**
@@ -39,7 +41,7 @@ export function StudioAuthGate({ children }: { children: React.ReactNode }) {
     return () => { active = false; controller.abort(); window.removeEventListener('message', onMessage) }
   }, [embedded])
 
-  if (embedded && window.location.origin === STUDIO_ORIGIN && state.status === 'authorized') return <>{children}</>
+  if (embedded && window.location.origin === STUDIO_ORIGIN && state.status === 'authorized') return <StudioSessionContext.Provider value={state.access!}>{children}</StudioSessionContext.Provider>
   return <main className="flex min-h-dvh items-center justify-center bg-background px-6 text-foreground">
     <div className="max-w-md text-center">
       <h1 className="text-xl font-semibold">Undiscovered One Graphic Studio</h1>
