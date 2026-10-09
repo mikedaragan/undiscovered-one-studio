@@ -90,6 +90,23 @@ export function HomePage() {
   // Creators supplies the library navigation when Studio is embedded.
   const embeddedInCreators = typeof window !== 'undefined' && window.parent !== window && window.location.origin === 'https://studio.creators.undiscoveredone.com'
 
+  // Creators owns the library tabs in embedded mode. Confirm the active tab
+  // only after this library has applied the requested navigation.
+  useEffect(() => {
+    if (!embeddedInCreators) return
+    const onSection = (event: Event) => {
+      const section = (event as CustomEvent<string>).detail
+      if (section !== 'files' && section !== 'recents' && section !== 'templates') return
+      setActiveFolderId(null)
+      setFilter(section === 'recents' ? 'recents' : 'all')
+      if (section === 'templates') setTemplatesOpen(true)
+      else setTemplatesOpen(false)
+      window.parent.postMessage({ source: 'undiscovered-one-studio-ui', version: 1, type: 'state', view: 'home', section }, 'https://creators.undiscoveredone.com')
+    }
+    window.addEventListener('uo-studio-library-section', onSection)
+    return () => window.removeEventListener('uo-studio-library-section', onSection)
+  }, [embeddedInCreators])
+
   // Build the right-click menu for a file / folder and open it at the cursor.
   const openFileMenu = (e: React.MouseEvent, file: DesignFile) => {
     e.preventDefault()
