@@ -12,7 +12,7 @@ interface Props {
   onGroupResizeStart: (handle: string, e: React.PointerEvent) => void
 }
 
-const HANDLE_DEFS = (w: number, h: number) => [
+const HANDLE_DEFS = (w: number, h: number, minSpacing = 76) => [
   { id: 'nw', cx: 0, cy: 0, cursor: 'nwse-resize' },
   { id: 'n', cx: w / 2, cy: 0, cursor: 'ns-resize' },
   { id: 'ne', cx: w, cy: 0, cursor: 'nesw-resize' },
@@ -24,8 +24,8 @@ const HANDLE_DEFS = (w: number, h: number) => [
 ].filter((handle) => {
   // On small on-screen objects, side grips collide with corner grips.
   // Keep the four corners; preserve all eight on larger selections.
-  if (handle.id === 'n' || handle.id === 's') return w >= 76
-  if (handle.id === 'e' || handle.id === 'w') return h >= 76
+  if (handle.id === 'n' || handle.id === 's') return w >= minSpacing
+  if (handle.id === 'e' || handle.id === 'w') return h >= minSpacing
   return true
 })
 
@@ -36,7 +36,8 @@ export function SelectionOverlay({ zoom, onResizeStart, onGroupResizeStart }: Pr
   // Finger-friendly, circular handles on touch/pen; small squares on mouse.
   const coarse = useCoarsePointer()
   const HANDLE_SIZE = coarse ? 10 : 8
-  const HIT_SIZE = coarse ? 32 : HANDLE_SIZE
+  const HIT_SIZE = coarse ? 40 : HANDLE_SIZE
+  const minSpacing = coarse ? HIT_SIZE * 1.5 : 76
   const HANDLE_HALF = HANDLE_SIZE / 2
   const HANDLE_RX = coarse ? HANDLE_HALF : 1
 
@@ -98,7 +99,7 @@ export function SelectionOverlay({ zoom, onResizeStart, onGroupResizeStart }: Pr
               transition={{ type: 'spring', stiffness: 520, damping: 26, delay: 0.02 }}
               onPointerDown={(e) => { e.stopPropagation(); onResizeStart(layer.id, 'rotate', e) }}
             />
-            {HANDLE_DEFS(w, h).map((handle, i) => (
+            {HANDLE_DEFS(w, h, minSpacing).map((handle, i) => (
               <motion.rect
                 key={handle.id}
                 x={handle.cx - HANDLE_HALF} y={handle.cy - HANDLE_HALF}
@@ -112,7 +113,7 @@ export function SelectionOverlay({ zoom, onResizeStart, onGroupResizeStart }: Pr
                 onPointerDown={(e) => { e.stopPropagation(); onResizeStart(layer.id, handle.id, e) }}
               />
             ))}
-            {coarse && HANDLE_DEFS(w, h).map((handle) => (
+            {coarse && HANDLE_DEFS(w, h, minSpacing).map((handle) => (
               <rect key={`hit-${handle.id}`} x={handle.cx - HIT_SIZE / 2} y={handle.cy - HIT_SIZE / 2}
                 width={HIT_SIZE} height={HIT_SIZE} fill="transparent" className="pointer-events-auto"
                 style={{ touchAction: 'none', cursor: handle.cursor }}
@@ -146,7 +147,7 @@ export function SelectionOverlay({ zoom, onResizeStart, onGroupResizeStart }: Pr
             ))}
             <g transform={`translate(${bx}, ${by})`}>
               <rect x={0} y={0} width={bw} height={bh} fill="none" stroke="#0017c7" strokeWidth={1.5} strokeDasharray="4 3" />
-              {HANDLE_DEFS(bw, bh).map((handle) => (
+              {HANDLE_DEFS(bw, bh, minSpacing).map((handle) => (
                 <rect
                   key={handle.id}
                   x={handle.cx - HANDLE_HALF} y={handle.cy - HANDLE_HALF}
@@ -156,7 +157,7 @@ export function SelectionOverlay({ zoom, onResizeStart, onGroupResizeStart }: Pr
                   onPointerDown={(e) => { e.stopPropagation(); onGroupResizeStart(handle.id, e) }}
                 />
               ))}
-              {coarse && HANDLE_DEFS(bw, bh).map((handle) => (
+              {coarse && HANDLE_DEFS(bw, bh, minSpacing).map((handle) => (
                 <rect key={`hit-${handle.id}`} x={handle.cx - HIT_SIZE / 2} y={handle.cy - HIT_SIZE / 2}
                   width={HIT_SIZE} height={HIT_SIZE} fill="transparent" className="pointer-events-auto"
                   style={{ touchAction: 'none', cursor: handle.cursor }}
