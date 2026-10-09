@@ -1,12 +1,18 @@
 import { motion, AnimatePresence } from 'motion/react'
+import { useEffect, useState } from 'react'
 import { Pen, Highlighter, Eraser, Palette } from 'lucide-react'
 import { useDesignStore } from '@/store/useDesignStore'
 import { useUIStore } from '@/store/useUIStore'
-import { getBrandColor } from '@/brand/palette'
 import { haptic } from '@/lib/haptics'
 
-// A curated quick palette — the full picker still lives in the sidebar panel.
-const SWATCHES = ['charcoal', 'brand-primary', 'red', 'green', 'orange']
+const RECENT_KEY = 'undiscovered-one-studio-draw-recent-colors'
+const MAX_RECENT = 5
+function loadRecentColors(): string[] {
+  try {
+    const saved = JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]')
+    return Array.isArray(saved) ? saved.filter((c): c is string => typeof c === 'string' && /^#[0-9a-fA-F]{6}$/.test(c)).slice(0, MAX_RECENT) : []
+  } catch { return [] }
+}
 const PEN_SIZES = [3, 6, 12, 24]
 const MARKER_SIZES = [12, 22, 40, 64]
 
@@ -37,6 +43,17 @@ export function DrawQuickBar() {
   const width = isH ? highlighterWidth : drawWidth
   const setWidth = isH ? setHighlighterWidth : setDrawWidth
   const sizes = isH ? MARKER_SIZES : PEN_SIZES
+  const [recentColors, setRecentColors] = useState<string[]>(loadRecentColors)
+  useEffect(() => {
+    if (!/^#[0-9a-fA-F]{6}$/.test(color.hex)) return
+    const hex = color.hex.toLowerCase()
+    setRecentColors((previous) => {
+      if (previous[0] === hex) return previous
+      const next = [hex, ...previous.filter((value) => value !== hex)].slice(0, MAX_RECENT)
+      try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)) } catch { /* private browsing */ }
+      return next
+    })
+  }, [color.hex])
 
   const modes = [
     { id: 'pen', label: 'Pen (P)', Icon: Pen, active: tool === 'draw' && !isH, onClick: () => { setTool('draw'); setDrawMode('pen') } },
@@ -72,23 +89,21 @@ export function DrawQuickBar() {
           {!isEraser && (
             <>
               <div className="mx-0.5 h-5 w-px shrink-0 bg-border" />
-              {SWATCHES.map((token) => {
-                const c = getBrandColor(token)
-                const active = color.token === token
+              {recentColors.map((hex) => {
+                const active = color.hex.toLowerCase() === hex
                 return (
                   <button
-                    key={token}
-                    title={c.token}
+                    key={hex}
+                    title={`Recent color ${hex}`}
                     onPointerDown={() => haptic('light')}
-                    onClick={(e) => { e.currentTarget.blur(); setColor(c) }}
-                    className={`h-6 w-6 shrink-0 rounded-full transition-transform duration-150 active:scale-[0.9] cursor-pointer ${
-                      active ? 'ring-2 ring-primary ring-offset-1 ring-offset-white' : 'ring-1 ring-black/10'
-                    }`}
-                    style={{ background: c.hex }}
-                    aria-label={`Colour ${c.token}`}
+                    onClick={(e) => { e.currentTarget.blur(); setColor({ token: 'custom', hex }) }}
+                    className={`h-6 w-6 shrink-0 rounded-full transition-transform duration-150 active:scale-[0.9] cursor-pointer ${active ? 'ring-2 ring-primary ring-offset-1 ring-offset-white' : 'ring-1 ring-black/10'}`}
+                    style={{ background: hex }}
+                    aria-label={`Recent color ${hex}`}
                   />
                 )
               })}
+              {recentColors.length === 0 && <span className="px-1 text-[11px] text-muted-foreground whitespace-nowrap">No recent colors</span>}
               <label
                 className={`relative flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-white shadow-sm ring-1 ${color.token === 'custom' ? 'ring-primary' : 'ring-black/20'}`}
                 style={{ background: color.token === 'custom' ? color.hex : 'conic-gradient(#ef3737, #ffb051, #78d55c, #00a896, #4361d9, #ad50d9, #ef3737)' }}
