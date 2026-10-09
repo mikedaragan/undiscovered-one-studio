@@ -6,6 +6,8 @@ import { useWorkspaceStore } from '@/store/useWorkspaceStore'
 import { useFileStore } from '@/store/useFileStore'
 import { Button } from '@/components/ui/button'
 import { FormatSelector } from '@/components/panels/FormatSelector'
+import { CloudHistory } from '@/cloud/CloudHistory'
+import { useCloudSaveStatus } from '@/cloud/StudioCloudSync'
 import {
   Undo2,
   Redo2,
@@ -18,10 +20,13 @@ import {
   Bookmark,
   Clock,
   Trash2,
+  CloudCheck,
+  CloudUpload,
+  CloudAlert,
 } from 'lucide-react'
 
 export function TopBar() {
-  const route = useRouterStore((s) => s.route)
+  const cloud = useCloudSaveStatus()
   const navigate = useRouterStore((s) => s.navigate)
   const documentName = useDesignStore((s) => s.document.name)
   const activeFileId = useWorkspaceStore((s) => s.activeFileId)
@@ -90,7 +95,7 @@ export function TopBar() {
 
       {/* Document name — the scratchpad's name is fixed, so it's read-only. */}
       <input
-        className={`text-[15px] font-medium text-foreground bg-transparent border-none outline-none min-w-0 max-w-[240px] rounded-[5px] px-2 py-1 transition-colors ${
+        className={`text-[15px] font-medium text-foreground bg-transparent border-none outline-none min-w-0 max-w-[130px] md:max-w-[240px] rounded-[5px] px-2 py-1 transition-colors ${
           isScratchpad ? 'cursor-default select-none' : 'hover:bg-muted/50 focus:bg-muted/50'
         }`}
         value={documentName}
@@ -108,7 +113,7 @@ export function TopBar() {
       />
 
       {/* Format selector */}
-      <div className="relative" ref={formatRef}>
+      <div className="relative hidden md:block" ref={formatRef}>
         <button
           className="flex items-center gap-2 px-3 py-1.5 text-[13px] text-muted-foreground bg-muted/50 hover:bg-muted rounded-[5px] transition-colors"
           onClick={() => setFormatOpen(!formatOpen)}
@@ -229,6 +234,13 @@ export function TopBar() {
             )}
           </div>
         )}
+      </div>
+
+      <div className="flex items-center gap-1 shrink-0">
+        <CloudHistory />
+        <div role="status" aria-live="polite" className="flex h-9 w-9 items-center justify-center" title={cloud.status === 'saving' ? 'Saving to cloud…' : cloud.status === 'ready' ? 'All changes saved' : cloud.status === 'error' ? 'Cloud save issue: '+cloud.error : 'Connecting to cloud…'}>
+          {cloud.status === 'error' ? <CloudAlert className="h-4 w-4 text-destructive" /> : cloud.status === 'ready' ? <CloudCheck className="h-4 w-4 text-primary" /> : <CloudUpload className="h-4 w-4 text-muted-foreground" />}
+        </div>
       </div>
 
       {/* Settings */}
