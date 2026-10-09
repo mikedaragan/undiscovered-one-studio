@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { Layers, SlidersHorizontal, Copy, Trash2, Type, Paintbrush, Move, Sparkles } from 'lucide-react'
+import { SlidersHorizontal, Copy, Trash2, Type, Paintbrush, Move, Sparkles } from 'lucide-react'
 import { Drawer, DrawerContent, DrawerTitle, DrawerClose } from '@/components/ui/drawer'
 import { LayerListPanel } from '@/components/panels/LayerListPanel'
 import { LayerInspector } from '@/components/panels/LayerInspector'
@@ -61,6 +61,11 @@ export function MobileControlSheet() {
   const isText = activeLayer?.type === 'text'
   const hasSelection = selectedCount > 0
   useEffect(() => { setInspectorTab('style') }, [activeLayer?.id])
+  useEffect(() => {
+    const listener = () => openLayers()
+    window.addEventListener('studio:open-mobile-layers', listener)
+    return () => window.removeEventListener('studio:open-mobile-layers', listener)
+  }, [])
 
   const duplicateSelection = () => {
     const s = useDesignStore.getState()
@@ -108,15 +113,7 @@ export function MobileControlSheet() {
               )}
             </AnimatePresence>
 
-            {/* Layers — always available */}
-            <button
-              aria-label="Layers"
-              className="h-11 w-11 flex items-center justify-center bg-foreground text-background rounded-full shadow-lg transition-transform active:scale-[0.96]"
-              onPointerDown={() => haptic()}
-              onClick={openLayers}
-            >
-              <Layers className="w-5 h-5" />
-            </button>
+
           </motion.div>
         )}
       </AnimatePresence>
