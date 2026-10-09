@@ -5,7 +5,7 @@ import { useWorkspaceStore } from '@/store/useWorkspaceStore'
 import { useRouterStore } from '@/store/useRouterStore'
 import { createStudioDesign, listStudioDesigns, saveStudioDesign } from './studioCloudApi'
 import type { DesignFile } from '@/types/fileSystem'
-import { nanoid } from 'nanoid'
+import { isStudioConflict, makeConflictRecovery } from './conflictRecovery'
 
 type Status = 'connecting' | 'ready' | 'saving' | 'error'
 type SyncState = { status: Status; error?: string }
@@ -72,10 +72,9 @@ export function StudioCloudSync() {
        ? await saveStudioDesign(session,mapping[id],file,remoteTimestamps.get(id))
        : await createStudioDesign(session,file)
      } catch(error) {
-      if(error instanceof Error && /Design changed in another browser/.test(error.message)){
+      if(isStudioConflict(error)){
        blocked.add(id)
-       const now=new Date().toISOString()
-       const recovery:DesignFile={...structuredClone(file),id:nanoid(),name:file.name+' (conflict recovery)',isScratchpad:false,folderId:null,createdAt:now,updatedAt:now}
+       const recovery=makeConflictRecovery(file)
        try {
         const preserved=await createStudioDesign(session,recovery)
         mapping[recovery.id]=preserved.id
