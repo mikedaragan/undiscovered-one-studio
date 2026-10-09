@@ -5,6 +5,7 @@ import { useWorkspaceStore } from '@/store/useWorkspaceStore'
 import { useRouterStore } from '@/store/useRouterStore'
 import { createStudioDesign, listStudioDesigns, saveStudioDesign } from './studioCloudApi'
 import type { DesignFile } from '@/types/fileSystem'
+import { nanoid } from 'nanoid'
 
 type Status = 'connecting' | 'ready' | 'saving' | 'error'
 type SyncState = { status: Status; error?: string }
@@ -45,9 +46,11 @@ export function StudioCloudSync() {
   const fingerprints=new Map<string,string>()
   const remoteTimestamps=new Map<string,string>()
   const queue=new Set<string>()
+  const blocked=new Set<string>()
   const saveMapping=()=>localStorage.setItem(scope,JSON.stringify(mapping))
   const schedule=(id:string)=>{
    if(!ready||disposed||id==='scratchpad')return
+   if(blocked.has(id))return
    queue.add(id);dirty=true
    if(timer)clearTimeout(timer)
    timer=setTimeout(()=>{timer=undefined;void flush()},2500)
@@ -63,16 +66,40 @@ export function StudioCloudSync() {
      if(!file||file.isScratchpad)continue
      const fingerprint=JSON.stringify({name:file.name,pages:file.pages,folderId:file.folderId})
      if(fingerprints.get(id)===fingerprint)continue
-     const saved=mapping[id]
-      ? await saveStudioDesign(session,mapping[id],file,remoteTimestamps.get(id))
-      : await createStudioDesign(session,file)
+     let saved
+     try {
+      saved=mapping[id]
+       ? await saveStudioDesign(session,mapping[id],file,remoteTimestamps.get(id))
+       : await createStudioDesign(session,file)
+     } catch(error) {
+      if(error instanceof Error && /Design changed in another browser/.test(error.message)){
+       blocked.add(id)
+       const now=new Date().toISOString()
+       const recovery:DesignFile={...structuredClone(file),id:nanoid(),name:file.name+' (conflict recovery)',isScratchpad:false,folderId:null,createdAt:now,updatedAt:now}
+       try {
+        const preserved=await createStudioDesign(session,recovery)
+        mapping[recovery.id]=preserved.id
+        remoteTimestamps.set(recovery.id,preserved.updated_at)
+        fingerprints.set(recovery.id,JSON.stringify({name:recovery.name,pages:recovery.pages,folderId:recovery.folderId}))
+        saveMapping()
+        if(!disposed)useFileStore.setState(s=>({files:[...s.files,recovery]}))
+        if(!disposed)emit({status:'error',error:'Conflict detected. Your edits were saved separately as '+recovery.name+'. Open that copy in Files.'})
+       }catch(recoveryError){
+        if(!disposed)useFileStore.setState(s=>({files:[...s.files,recovery]}))
+        if(!disposed)emit({status:'error',error:'Conflict detected. A local recovery copy was created, but its cloud upload failed. Do not clear browser data.'})
+       }
+       continue
+      }
+      queue.add(id)
+      throw error
+     }
      mapping[id]=saved.id;remoteTimestamps.set(id,saved.updated_at);saveMapping()
      fingerprints.set(id,fingerprint)
      // If an edit occurred during the request, ensure it is uploaded next.
      const latest=useFileStore.getState().getFile(id)
      if(latest&&JSON.stringify({name:latest.name,pages:latest.pages,folderId:latest.folderId})!==fingerprint)queue.add(id)
     }
-    if(!disposed)emit({status:'ready'})
+    if(!disposed&&blocked.size===0)emit({status:'ready'})
    }catch(error){
     dirty=true
     if(!disposed)emit({status:'error',error:error instanceof Error?error.message:'Cloud save failed'})
