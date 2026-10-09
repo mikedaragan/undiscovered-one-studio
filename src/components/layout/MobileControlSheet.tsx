@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { Layers, SlidersHorizontal, Copy, Trash2, Type } from 'lucide-react'
+import { Layers, SlidersHorizontal, Copy, Trash2, Type, Paintbrush, Move, Sparkles } from 'lucide-react'
 import { Drawer, DrawerContent, DrawerTitle, DrawerClose } from '@/components/ui/drawer'
 import { LayerListPanel } from '@/components/panels/LayerListPanel'
 import { LayerInspector } from '@/components/panels/LayerInspector'
@@ -50,15 +50,17 @@ const DETENTS: number[] = [0.55, 0.92]
 
 export function MobileControlSheet() {
   const [drawer, setDrawer] = useState<'layers' | 'inspector' | null>(null)
+  const [inspectorTab, setInspectorTab] = useState<'style' | 'layout' | 'effects'>('style')
   const [propSnap, setPropSnap] = useState<number | string | null>(DETENTS[0])
   const [layerSnap, setLayerSnap] = useState<number | string | null>(DETENTS[0])
-  const openInspector = () => { setPropSnap(DETENTS[0]); setDrawer('inspector') }
+  const openInspector = () => { setInspectorTab('style'); setPropSnap(DETENTS[0]); setDrawer('inspector') }
   const openLayers = () => { setLayerSnap(DETENTS[0]); setDrawer('layers') }
   const activeLayer = useDesignStore((s) => s.document.layers.find((l) => l.id === s.activeLayerId) ?? null)
   const selectedCount = useDesignStore((s) => s.selectedLayerIds.size)
   const editable = !!activeLayer && activeLayer.type !== 'background'
   const isText = activeLayer?.type === 'text'
   const hasSelection = selectedCount > 0
+  useEffect(() => { setInspectorTab('style') }, [activeLayer?.id])
 
   const duplicateSelection = () => {
     const s = useDesignStore.getState()
@@ -134,8 +136,20 @@ export function MobileControlSheet() {
       <Drawer open={drawer === 'inspector'} onOpenChange={(open) => !open && setDrawer(null)} snapPoints={DETENTS} activeSnapPoint={propSnap} setActiveSnapPoint={setPropSnap}>
         <DrawerContent className="mt-0 h-[92vh] max-h-none">
           <SheetHeader title={activeLayer?.name ?? 'Properties'} />
-          <div className="mobile-inspector flex-1 min-h-0 overflow-y-auto px-3 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] no-scrollbar">
-            {activeLayer ? <LayerInspector layer={activeLayer} /> : null}
+          <div role="tablist" aria-label="Property categories" className="grid grid-cols-3 gap-2 px-4 pb-3">
+            {([
+              { id: 'style', label: 'Style', icon: Paintbrush },
+              { id: 'layout', label: 'Position', icon: Move },
+              { id: 'effects', label: 'Effects', icon: Sparkles },
+            ] as const).map((tab) => (
+              <button key={tab.id} role="tab" aria-selected={inspectorTab === tab.id} onClick={() => setInspectorTab(tab.id)}
+                className={`flex min-h-11 items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium ${inspectorTab === tab.id ? 'bg-foreground text-background' : 'bg-muted text-foreground'}`}>
+                <tab.icon className="h-4 w-4" />{tab.label}
+              </button>
+            ))}
+          </div>
+          <div className="mobile-inspector flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] no-scrollbar">
+            {activeLayer ? <LayerInspector layer={activeLayer} mobileSection={inspectorTab} /> : null}
           </div>
         </DrawerContent>
       </Drawer>
