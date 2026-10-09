@@ -10,6 +10,7 @@ async function request<T>(session:StudioCloudSession,body:Record<string,unknown>
  if(!response.ok||payload.error)throw new Error(payload.error??'Studio cloud request failed')
  return payload.data as T
 }
+export const getStudioDesign=async(session:StudioCloudSession,designId:string)=>{const designs=await listStudioDesigns(session);const design=designs.find(d=>d.id===designId);if(!design)throw new Error('Cloud design not found');return design}
 export const listStudioDesigns=(session:StudioCloudSession)=>request<StudioCloudDesign[]>(session,{action:'list'})
 export const createStudioDesign=(session:StudioCloudSession,file:DesignFile)=>request<StudioCloudDesign>(session,{action:'create',file})
 export const saveStudioDesign=(session:StudioCloudSession,designId:string,file:DesignFile,expectedUpdatedAt?:string)=>request<StudioCloudDesign>(session,{action:'save',designId,file,expectedUpdatedAt})
