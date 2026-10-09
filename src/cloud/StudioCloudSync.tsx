@@ -106,12 +106,17 @@ export function StudioCloudSync() {
      if(latest&&JSON.stringify({name:latest.name,pages:latest.pages,folderId:latest.folderId})!==fingerprint)queue.add(id)
     }
     retryAttempts=0
-    if(!disposed&&blocked.size===0)emit({status:'ready'})
+    if(!disposed&&blocked.size===0&&queue.size===0)emit({status:'ready'})
    }catch(error){
     dirty=true
     if(!disposed)emit({status:'error',error:error instanceof Error?error.message:'Cloud save failed'})
     if(!(error instanceof Error && /401|403|unauthorized|forbidden/i.test(error.message)))retry()
-   }finally{working=false}
+   }finally{
+    working=false
+    if(!disposed&&queue.size>0&&dirty&&!retryTimer){
+     timer=setTimeout(()=>{timer=undefined;void flush()},2500)
+    }
+   }
   }
   const onReconnect=()=>{if(ready&&queue.size){dirty=true;void flush()}}
   window.addEventListener('online',onReconnect)
@@ -144,7 +149,7 @@ export function StudioCloudSync() {
      }else if(!matched) queue.add(file.id)
     }
     saveMapping();ready=true;dirty=queue.size>0
-    emit({status:'ready'})
+    emit({status:dirty?'saving':'ready'})
     if(dirty)void flush()
    }catch(error){if(!disposed)emit({status:'error',error:error instanceof Error?error.message:'Cloud connection failed'})}
   }
