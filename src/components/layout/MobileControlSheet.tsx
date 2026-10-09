@@ -31,7 +31,7 @@ function ClusterButton({
   return (
     <motion.button
       aria-label={label}
-      className={`h-11 w-11 flex items-center justify-center rounded-full shadow-lg border border-black/5 transition-transform active:scale-[0.96] ${tone}`}
+      className={`h-11 w-11 flex items-center justify-center rounded-xl transition-transform active:scale-[0.96] ${tone}`}
       initial={{ opacity: 0, scale: 0.6, y: 6 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.6, y: 6 }}
@@ -82,7 +82,7 @@ export function MobileControlSheet() {
       <AnimatePresence>
         {drawer === null && (
           <motion.div
-            className="fixed bottom-16 left-3 z-30 flex flex-col gap-2 md:hidden"
+            className="fixed bottom-[5.25rem] left-1/2 z-30 flex -translate-x-1/2 flex-row items-center gap-2 rounded-2xl border border-black/5 bg-white/95 p-1.5 shadow-lg backdrop-blur md:hidden"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
@@ -121,7 +121,7 @@ export function MobileControlSheet() {
       {/* Layers drawer — opens at the medium detent, drag up to large. The body
           is flex-1/min-h-0 so the header stays pinned and scrolling works. */}
       <Drawer open={drawer === 'layers'} onOpenChange={(open) => !open && setDrawer(null)} snapPoints={DETENTS} activeSnapPoint={layerSnap} setActiveSnapPoint={setLayerSnap}>
-        <DrawerContent className="mt-0 h-[92vh] max-h-none">
+        <DrawerContent className="mt-0 h-[92dvh] max-h-none">
           <SheetHeader title="Layers" />
           <div className="flex-1 min-h-0 overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+1.5rem)] no-scrollbar">
             <LayerListPanel />
