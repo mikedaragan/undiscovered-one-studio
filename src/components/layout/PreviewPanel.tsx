@@ -234,8 +234,13 @@ export function PreviewPanel() {
     const bboxW = Math.max(1, maxX - minX)
     const bboxH = Math.max(1, maxY - minY)
     const rect = el.getBoundingClientRect()
-    const pad = 64
-    const z = Math.max(0.05, Math.min(1, Math.min((rect.width - pad * 2) / bboxW, (rect.height - pad * 2) / bboxH)))
+    // Fit to the actual visible editor viewport, not the phone's full screen.
+    // Responsive margins leave room for the frame label and selection handles.
+    const marginX = Math.min(64, Math.max(16, rect.width * 0.065))
+    const marginY = Math.min(64, Math.max(24, rect.height * 0.09))
+    const availableW = Math.max(1, rect.width - marginX * 2)
+    const availableH = Math.max(1, rect.height - marginY * 2)
+    const z = Math.max(0.1, Math.min(1, availableW / bboxW, availableH / bboxH))
     tweenView(z, { x: -((minX + maxX) / 2) * z, y: -((minY + maxY) / 2) * z })
   }, [tweenView])
 
