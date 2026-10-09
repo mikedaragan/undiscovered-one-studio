@@ -151,8 +151,8 @@
   }
   #root {
     height: 100dvh;
-    /* Dark backdrop revealed when a sheet scales the app back (iOS depth). */
-    background-color: #000;
+    /* Keep the embedded Studio readable even before the first React paint. */
+    background-color: var(--background);
   }
   /* Balanced headings — no lonely last word (make-interfaces #10) */
   h1, h2, h3, h4 {\n    font-family: var(--studio-heading-font);
