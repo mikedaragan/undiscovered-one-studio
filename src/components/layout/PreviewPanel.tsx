@@ -9,6 +9,7 @@ import type { Layer } from '@/types/design'
 import { useWorkspaceStore } from '@/store/useWorkspaceStore'
 import { DesignSvgScene } from '@/components/canvas/DesignSvgScene'
 import { FloatingToolbar } from '@/components/layout/FloatingToolbar'
+import { FormatSelector } from '@/components/panels/FormatSelector'
 import { DrawQuickBar } from '@/components/layout/DrawQuickBar'
 import { useCoarsePointer } from '@/hooks/useCoarsePointer'
 import { FrameThumbnail } from '@/components/canvas/FrameThumbnail'
@@ -156,6 +157,7 @@ export function PreviewPanel() {
   const gridConfig = useUIStore((s) => s.gridConfig)
   const setGridPreset = useUIStore((s) => s.setGridPreset)
   const [gridMenuOpen, setGridMenuOpen] = useState(false)
+  const [mobileFormatOpen, setMobileFormatOpen] = useState(false)
 
   // Inline frame rename (double-click the frame label).
   const [editingFrameId, setEditingFrameId] = useState<string | null>(null)
@@ -1067,7 +1069,17 @@ export function PreviewPanel() {
           )}
         </div>
         <div className="flex-1" />
-        <span className="text-[12px] tabular-nums text-muted-foreground/50">{(activeFrame?.width ?? docFormat.width)} x {(activeFrame?.height ?? docFormat.height)}</span>
+        <div className="relative">
+          <button type="button" className="flex items-center gap-1 rounded-md px-2 py-1 text-[12px] tabular-nums text-muted-foreground hover:bg-muted" onClick={() => setMobileFormatOpen((v) => !v)} aria-label="Change canvas size" aria-expanded={mobileFormatOpen}>
+            {(activeFrame?.width ?? docFormat.width)} × {(activeFrame?.height ?? docFormat.height)} <span className="md:hidden">⌄</span>
+          </button>
+          {mobileFormatOpen && <>
+            <button className="fixed inset-0 z-40" aria-label="Close canvas size menu" onClick={() => setMobileFormatOpen(false)} />
+            <div className="absolute bottom-full right-0 z-50 mb-2 max-h-[60dvh] w-[min(19rem,85vw)] overflow-y-auto rounded-lg border border-border bg-card shadow-xl">
+              <FormatSelector onClose={() => setMobileFormatOpen(false)} />
+            </div>
+          </>}
+        </div>
       </div>
     </div>
   )
