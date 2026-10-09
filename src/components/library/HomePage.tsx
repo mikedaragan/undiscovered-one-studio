@@ -394,7 +394,7 @@ export function HomePage() {
           </div>
         </div>
 
-        <div className="px-8 pb-8">
+        <div className="px-4 pb-6 md:px-8 md:pb-8">
           {/* First-run welcome (dismissible, shown once). */}
           <FirstRunWelcome
             onNewFile={() => { const id = createFile(generateFileName(files.map((f) => f.name)), activeFolderId); handleOpenFile(id) }}
@@ -448,7 +448,7 @@ export function HomePage() {
 
           {/* Files grid */}
           {viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
               {visibleFiles.map((file) => (
                 <FileCard
                   key={file.id}
@@ -943,19 +943,19 @@ function FirstRunWelcome({ onNewFile, onTemplates }: { onNewFile: () => void; on
   const act = (fn: () => void) => { dismiss(); fn() }
 
   return (
-    <div className="relative mb-6 overflow-hidden rounded-[14px] border border-border bg-card">
+    <div className="relative mb-4 md:mb-6 overflow-hidden rounded-[14px] border border-border bg-card">
       {/* Brand wash */}
       <div className="pointer-events-none absolute inset-0 opacity-70" style={{ background: cardGradient('tela-welcome') }} />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-card via-card/85 to-transparent" />
-      <div className="relative flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="relative flex flex-col gap-2 p-3 pr-10 md:gap-3 md:p-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="max-w-[520px]">
           <div className="mb-1 flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
             <h2 className="text-[16px] font-semibold text-foreground">Welcome to {BRAND.productName}</h2>
           </div>
           <p className="text-[13px] leading-relaxed text-muted-foreground">
-            A fast, local-first canvas for posts, ads, and quick graphics — everything stays in your browser.
-            Start from a template or a blank file, then press <kbd className="rounded-[4px] border border-black/10 bg-muted px-1 py-0.5 text-[11px] font-medium text-foreground/80">⌘K</kbd> for commands and <kbd className="rounded-[4px] border border-black/10 bg-muted px-1 py-0.5 text-[11px] font-medium text-foreground/80">?</kbd> for shortcuts.
+            Create artwork in your browser with cloud saving for your designs.
+            <span className="hidden md:inline">Start from a template or a blank file, then press <kbd className="rounded-[4px] border border-black/10 bg-muted px-1 py-0.5 text-[11px] font-medium text-foreground/80">⌘K</kbd> for commands and <kbd className="rounded-[4px] border border-black/10 bg-muted px-1 py-0.5 text-[11px] font-medium text-foreground/80">?</kbd> for shortcuts.</span>
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
