@@ -23,6 +23,7 @@ import {
   Pencil,
   ArrowUp,
   ArrowDown,
+  GripVertical,
 } from 'lucide-react'
 import type { LayerType } from '@/types/design'
 import type { Page } from '@/types/workspace'
@@ -104,19 +105,27 @@ export function LayerListPanel() {
 
   // Layer drag-to-reorder (operates on the active frame's design-store layers).
   const [dragLayerId, setDragLayerId] = useState<string | null>(null)
+  const touchDragRef = useRef<{ id: string; targetId: string | null; pos: 'above' | 'below' } | null>(null)
   const [dropTarget, setDropTarget] = useState<{ id: string; pos: 'above' | 'below' } | null>(null)
 
+  const moveLayerTo = (id: string, targetId: string, pos: 'above' | 'below') => {
+    if (id === targetId) return
+    const layers = useDesignStore.getState().document.layers
+    const target = layers.find(l => l.id === targetId)
+    const dragged = layers.find(l => l.id === id)
+    if (!target || !dragged || dragged.type === 'background' || target.type === 'background') return
+    // Reorder relative to actual neighboring z indices, not an arbitrary half-step.
+    const ordered = layers.filter(l => l.type !== 'background' && l.id !== id).sort((a,b) => b.zIndex - a.zIndex)
+    const index = ordered.findIndex(l => l.id === targetId)
+    const insertAt = index + (pos === 'below' ? 1 : 0)
+    const before = ordered[insertAt - 1]
+    const after = ordered[insertAt]
+    const z = before && after ? (before.zIndex + after.zIndex) / 2 : before ? before.zIndex - 1 : after ? after.zIndex + 1 : 1
+    reorderLayer(id, z)
+  }
   const finishLayerReorder = () => {
     if (dragLayerId && dropTarget && dragLayerId !== dropTarget.id) {
-      const layers = useDesignStore.getState().document.layers
-      const target = layers.find((l) => l.id === dropTarget.id)
-      const dragged = layers.find((l) => l.id === dragLayerId)
-      if (target && dragged && dragged.type !== 'background') {
-        // List is rendered front→back (zIndex desc); "above" means more in front.
-        // A half-step lands the layer between neighbours; reorderLayer renumbers.
-        const newZ = dropTarget.pos === 'above' ? target.zIndex + 0.5 : target.zIndex - 0.5
-        reorderLayer(dragLayerId, Math.max(0.5, newZ)) // never sink below the background
-      }
+      moveLayerTo(dragLayerId, dropTarget.id, dropTarget.pos)
     }
     setDragLayerId(null)
     setDropTarget(null)
@@ -180,6 +189,28 @@ export function LayerListPanel() {
             onDuplicate={layer.type !== 'background' ? () => duplicateLayer(layer.id) : undefined}
             onDelete={layer.type !== 'background' ? () => removeLayer(layer.id) : undefined}
             reorderEnabled={canReorder}
+            onTouchReorder={canReorder ? (phase, id, y) => {
+              if (phase === 'start') {
+                touchDragRef.current = { id, targetId: null, pos: 'above' }
+                setDragLayerId(id)
+              } else if (phase === 'move') {
+                const hit = document.elementFromPoint(window.innerWidth / 2, y)?.closest('[data-layer-row]') as HTMLElement | null
+                const targetId = hit?.dataset.layerRow ?? null
+                if (touchDragRef.current && targetId && targetId !== id) {
+                  const rect = hit!.getBoundingClientRect()
+                  const pos = y < rect.top + rect.height / 2 ? 'above' : 'below'
+                  touchDragRef.current.targetId = targetId
+                  touchDragRef.current.pos = pos
+                  setDropTarget({ id: targetId, pos })
+                }
+              } else {
+                const drag = touchDragRef.current
+                if (phase === 'end' && drag?.targetId) moveLayerTo(drag.id, drag.targetId, drag.pos)
+                touchDragRef.current = null
+                setDragLayerId(null)
+                setDropTarget(null)
+              }
+            } : undefined}
             onMoveForward={canReorder ? () => reorderSelection([layer.id], 'forward') : undefined}
             onMoveBackward={canReorder ? () => reorderSelection([layer.id], 'backward') : undefined}
             isDragging={dragLayerId === layer.id}
@@ -438,6 +469,7 @@ function LayerRow({
   onContextMenu,
   onMoveForward,
   onMoveBackward,
+  onTouchReorder,
   rename,
 }: {
   layer: any
@@ -459,6 +491,7 @@ function LayerRow({
   onContextMenu?: (e: React.MouseEvent) => void
   onMoveForward?: () => void
   onMoveBackward?: () => void
+  onTouchReorder?: (phase: 'start' | 'move' | 'end' | 'cancel', id: string, y: number) => void
   rename?: {
     editing: boolean
     value: string
@@ -472,6 +505,7 @@ function LayerRow({
 
   return (
     <div
+      data-layer-row={layer.id}
       draggable={reorderEnabled && typeof window !== 'undefined' && !window.matchMedia('(pointer: coarse)').matches}
       onDragStart={reorderEnabled ? (e) => { e.dataTransfer.effectAllowed = 'move'; onDragStartLayer?.() } : undefined}
       onDragOver={onDragOverLayer ? (e) => {
@@ -492,6 +526,7 @@ function LayerRow({
     >
       {dropPos === 'above' && <div className="absolute inset-x-2 -top-px h-0.5 rounded-full bg-primary pointer-events-none" />}
       {dropPos === 'below' && <div className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-primary pointer-events-none" />}
+      {onTouchReorder && <button type="button" aria-label={`Drag to reorder ${layer.name}`} title="Hold and drag to reorder" className="flex h-10 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground md:hidden" style={{ touchAction: 'none' }} onClick={e => e.stopPropagation()} onPointerDown={e => { if (e.pointerType === 'mouse') return; e.preventDefault(); e.stopPropagation(); e.currentTarget.setPointerCapture(e.pointerId); onTouchReorder('start', layer.id, e.clientY) }} onPointerMove={e => { if (!e.currentTarget.hasPointerCapture(e.pointerId)) return; e.preventDefault(); onTouchReorder('move', layer.id, e.clientY) }} onPointerUp={e => { if (!e.currentTarget.hasPointerCapture(e.pointerId)) return; e.stopPropagation(); onTouchReorder('end', layer.id, e.clientY) }} onPointerCancel={e => onTouchReorder('cancel', layer.id, e.clientY)}><GripVertical className="h-5 w-5" /></button>}
       <Icon className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
       {rename?.editing ? (
         <input
