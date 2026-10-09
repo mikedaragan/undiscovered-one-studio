@@ -16,7 +16,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { useRouterStore } from '@/store/useRouterStore'
 import { useStudioBridge } from '@/hooks/useStudioBridge'
 import { StudioAuthGate } from '@/components/auth/StudioAuthGate'
-import { StudioCloudSync } from '@/cloud/StudioCloudSync'
+import { StudioCloudSync, useCloudSaveStatus } from '@/cloud/StudioCloudSync'
 import { installAgentRpc } from '@/agent/rpc'
 import { useEffect } from 'react'
 import { useDesignStore } from '@/store/useDesignStore'
@@ -24,6 +24,7 @@ import { useWorkspaceStore } from '@/store/useWorkspaceStore'
 
 function EditorView() {
   useKeyboardShortcuts()
+  const cloud = useCloudSaveStatus()
   // Ensure tool is select on mount (prevents stale tool state from blocking interaction)
   useEffect(() => { useDesignStore.getState().setTool('select') }, [])
 
@@ -60,6 +61,7 @@ function EditorView() {
     <div className="h-dvh grid grid-rows-[auto_auto_1fr] grid-cols-[minmax(0,1fr)] md:grid-cols-[280px_minmax(0,1fr)_300px] overflow-hidden">
       <div className="col-span-full">
         <TopBar />
+        <div role="status" aria-live="polite" className="absolute right-3 top-14 z-40 rounded-b bg-card px-2 py-1 text-xs text-muted-foreground shadow-sm">{cloud.status === 'saving' ? 'Saving to cloud…' : cloud.status === 'ready' ? 'Cloud connected' : cloud.status === 'error' ? `Cloud save issue: ${cloud.error}` : 'Connecting cloud…'}</div>
       </div>
       <div className="col-span-full">
         <ToolBar />
