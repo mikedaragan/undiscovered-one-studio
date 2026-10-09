@@ -3,9 +3,11 @@ import { useStudioSession } from '@/components/auth/StudioAuthGate'
 import { useFileStore } from '@/store/useFileStore'
 import { useWorkspaceStore } from '@/store/useWorkspaceStore'
 import { useRouterStore } from '@/store/useRouterStore'
-import { createStudioDesign, listStudioDesigns, saveStudioDesign } from './studioCloudApi'
+import { createStudioDesign, getStudioDesign, listStudioDesigns, saveStudioDesign } from './studioCloudApi'
 import type { DesignFile } from '@/types/fileSystem'
-import { isStudioConflict, makeConflictRecovery } from './conflictRecovery'
+import { isStudioConflict } from './conflictRecovery'
+import { ConflictDialog } from './ConflictDialog'
+import { resolveDesignConflict, type DesignConflict, type ConflictChoice } from './resolveDesignConflict'
 
 type Status = 'connecting' | 'ready' | 'saving' | 'error'
 type SyncState = { status: Status; error?: string }
@@ -36,6 +38,10 @@ function syncWorkspaceToFile() {
  */
 export function StudioCloudSync() {
  const session=useStudioSession()
+ const [conflict,setConflict]=useState<DesignConflict|null>(null)
+ const [resolving,setResolving]=useState(false)
+ const [resolutionError,setResolutionError]=useState('')
+ const [resolveHandler,setResolveHandler]=useState<((choice:ConflictChoice)=>Promise<void>)|null>(null)
  useEffect(()=>{
   if(!session)return
   let disposed=false,working=false,dirty=false,ready=false
@@ -47,6 +53,7 @@ export function StudioCloudSync() {
   const remoteTimestamps=new Map<string,string>()
   const queue=new Set<string>()
   const blocked=new Set<string>()
+  let activeConflict:DesignConflict|null=null
   const saveMapping=()=>localStorage.setItem(scope,JSON.stringify(mapping))
   const schedule=(id:string)=>{
    if(!ready||disposed||id==='scratchpad')return
@@ -72,21 +79,13 @@ export function StudioCloudSync() {
        ? await saveStudioDesign(session,mapping[id],file,remoteTimestamps.get(id))
        : await createStudioDesign(session,file)
      } catch(error) {
-      if(isStudioConflict(error)){
+      if(isStudioConflict(error)&&mapping[id]){
        blocked.add(id)
-       const now=new Date().toISOString()
-       const recovery=makeConflictRecovery(file,now)
-       try{
-        const preserved=await createStudioDesign(session,recovery)
-        mapping[recovery.id]=preserved.id
-        remoteTimestamps.set(recovery.id,preserved.updated_at)
-        fingerprints.set(recovery.id,JSON.stringify({name:recovery.name,pages:recovery.pages,folderId:recovery.folderId}))
-        saveMapping()
-        if(!disposed)useFileStore.setState(s=>({files:[...s.files,recovery]}))
-        if(!disposed)emit({status:'error',error:'A conflict occurred. Both designs are preserved. Open Files to compare the original and recovery copy.'})
+       try {
+        const remote=await getStudioDesign(session,mapping[id])
+        if(!disposed){activeConflict={local:structuredClone(file),remote,fileId:id};setConflict(activeConflict);emit({status:'error',error:'Save conflict: choose which version to keep.'})}
        }catch{
-        if(!disposed)useFileStore.setState(s=>({files:[...s.files,recovery]}))
-        if(!disposed)emit({status:'error',error:'Cloud conflict. A local recovery copy was created, but its upload failed.'})
+        if(!disposed)emit({status:'error',error:'Save conflict. Local edits retained, but cloud comparison could not load.'})
        }
        continue
       }
@@ -157,8 +156,39 @@ export function StudioCloudSync() {
     }
    }
   })
+  const handleChoice=async(choice:ConflictChoice)=>{
+   const item=activeConflict
+   if(!item||disposed)return
+   setResolving(true);setResolutionError('')
+   try{
+    const resolved=await resolveDesignConflict(session,item,choice)
+    if(disposed)return
+    if(resolved.localCopy&&resolved.localCopyCloudId){
+     const copy=resolved.localCopy
+     mapping[copy.id]=resolved.localCopyCloudId
+     fingerprints.set(copy.id,JSON.stringify({name:copy.name,pages:copy.pages,folderId:copy.folderId}))
+     saveMapping()
+     useFileStore.setState(s=>({files:[...s.files,copy]}))
+    }
+    if(choice==='cloud'){
+     const restored={...resolved.remote.document,id:item.fileId,updatedAt:resolved.remote.updated_at}
+     fingerprints.set(item.fileId,JSON.stringify({name:restored.name,pages:restored.pages,folderId:restored.folderId}))
+     useFileStore.setState(s=>({files:s.files.map(f=>f.id===item.fileId?restored:f)}))
+     if(useWorkspaceStore.getState().activeFileId===item.fileId)useRouterStore.getState().navigate({page:'library'})
+    }else if(choice==='local'){
+     fingerprints.set(item.fileId,JSON.stringify({name:item.local.name,pages:item.local.pages,folderId:item.local.folderId}))
+    }
+    remoteTimestamps.set(item.fileId,resolved.remote.updated_at)
+    blocked.delete(item.fileId)
+    activeConflict=null
+    setConflict(null)
+    emit({status:'ready'})
+   }catch(e){if(!disposed)setResolutionError(e instanceof Error?e.message:'Conflict resolution failed')}
+   finally{if(!disposed)setResolving(false)}
+  }
+  setResolveHandler(()=>handleChoice)
   void init()
   return()=>{disposed=true;unsubFiles();unsubWorkspace();if(timer)clearTimeout(timer)}
  },[session])
- return null
+ return conflict?<ConflictDialog conflict={conflict} busy={resolving} error={resolutionError} onChoose={choice=>{void resolveHandler?.(choice)}}/>:null
 }
