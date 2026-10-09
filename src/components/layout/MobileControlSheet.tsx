@@ -80,7 +80,7 @@ export function MobileControlSheet() {
   return (
     <>
       <AnimatePresence>
-        {drawer === null && (
+        {drawer === null && (hasSelection || editable) && (
           <motion.div
             className="fixed bottom-[8.5rem] left-1/2 z-30 flex -translate-x-1/2 flex-row items-center gap-2 rounded-2xl border border-black/5 bg-white/95 p-1.5 shadow-lg backdrop-blur md:hidden"
             initial={{ opacity: 0, y: 10 }}
