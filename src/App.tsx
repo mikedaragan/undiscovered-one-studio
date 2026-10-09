@@ -16,8 +16,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { useRouterStore } from '@/store/useRouterStore'
 import { useStudioBridge } from '@/hooks/useStudioBridge'
 import { StudioAuthGate } from '@/components/auth/StudioAuthGate'
-import { StudioCloudSync, useCloudSaveStatus } from '@/cloud/StudioCloudSync'
-import { CloudHistory } from '@/cloud/CloudHistory'
+import { StudioCloudSync } from '@/cloud/StudioCloudSync'
 import { installAgentRpc } from '@/agent/rpc'
 import { useEffect } from 'react'
 import { useDesignStore } from '@/store/useDesignStore'
@@ -25,7 +24,6 @@ import { useWorkspaceStore } from '@/store/useWorkspaceStore'
 
 function EditorView() {
   useKeyboardShortcuts()
-  const cloud = useCloudSaveStatus()
   // Ensure tool is select on mount (prevents stale tool state from blocking interaction)
   useEffect(() => { useDesignStore.getState().setTool('select') }, [])
 
@@ -62,7 +60,7 @@ function EditorView() {
     <div className="h-dvh grid grid-rows-[auto_1fr] md:grid-rows-[auto_auto_1fr] grid-cols-[minmax(0,1fr)] md:grid-cols-[280px_minmax(0,1fr)_300px] overflow-hidden">
       <div className="col-span-full">
         <TopBar />
-        <div className="flex items-center justify-end gap-3 border-b border-border bg-card px-3 py-1"><CloudHistory /><div role="status" aria-live="polite" className="text-xs text-muted-foreground">{cloud.status === 'saving' ? 'Saving to cloud…' : cloud.status === 'ready' ? 'All changes saved' : cloud.status === 'error' ? `Cloud save issue: ${cloud.error}` : 'Connecting cloud…'}</div></div>
+        <div className="hidden md:flex items-center justify-end gap-3 border-b border-border bg-card px-3 py-1"><span className="text-xs text-muted-foreground">Cloud history and save status are available in the top bar.</span></div>
       </div>
       <div className="hidden md:block col-span-full">
         <ToolBar />
