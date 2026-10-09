@@ -77,7 +77,7 @@ export function LayerListPanel() {
     value: editValue,
     onChange: setEditValue,
     onStart: () => { setEditingId(`layer-${layer.id}`); setEditValue(layer.name) },
-    onCommit: () => { if (editValue.trim()) updateLayer(layer.id, { name: editValue.trim() }); setEditingId(null) },
+    onCommit: () => { if (editValue.trim() && editValue.trim() !== layer.name) { pushSnapshot(); updateLayer(layer.id, { name: editValue.trim() }) }; setEditingId(null) },
     onCancel: () => setEditingId(null),
   })
 
@@ -96,8 +96,8 @@ export function LayerListPanel() {
       { id: 'vis', label: layer.visible ? 'Hide' : 'Show', icon: layer.visible ? EyeOff : Eye, action: () => updateLayer(layer.id, { visible: !layer.visible }) },
       { id: 'lock', label: layer.locked ? 'Unlock' : 'Lock', icon: layer.locked ? Unlock : Lock, action: () => updateLayer(layer.id, { locked: !layer.locked }) },
       ...(isBg ? [] : [
-        { id: 'fwd', label: 'Bring forward', icon: ArrowUp, separatorBefore: true, action: () => { pushSnapshot(); reorderLayer(layer.id, layer.zIndex + 1) } },
-        { id: 'bwd', label: 'Send backward', icon: ArrowDown, action: () => { pushSnapshot(); reorderLayer(layer.id, Math.max(1, layer.zIndex - 1)) } },
+        { id: 'fwd', label: 'Bring forward', icon: ArrowUp, separatorBefore: true, action: () => reorderSelection([layer.id], 'forward') },
+        { id: 'bwd', label: 'Send backward', icon: ArrowDown, action: () => reorderSelection([layer.id], 'backward') },
         { id: 'del', label: 'Delete', icon: Trash2, danger: true, separatorBefore: true, action: () => { pushSnapshot(); removeLayer(layer.id) } },
       ]),
     ])
@@ -194,7 +194,7 @@ export function LayerListPanel() {
                 touchDragRef.current = { id, targetId: null, pos: 'above' }
                 setDragLayerId(id)
               } else if (phase === 'move') {
-                const hit = document.elementFromPoint(window.innerWidth / 2, y)?.closest('[data-layer-row]') as HTMLElement | null
+                const hit = document.elementFromPoint(Math.min(window.innerWidth - 20, Math.max(20, (document.querySelector('[data-layer-row]')?.getBoundingClientRect().left ?? 0) + 55)), y)?.closest('[data-layer-row]') as HTMLElement | null
                 const targetId = hit?.dataset.layerRow ?? null
                 if (touchDragRef.current && targetId && targetId !== id) {
                   const rect = hit!.getBoundingClientRect()
