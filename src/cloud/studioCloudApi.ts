@@ -12,5 +12,8 @@ async function request<T>(session:StudioCloudSession,body:Record<string,unknown>
 }
 export const listStudioDesigns=(session:StudioCloudSession)=>request<StudioCloudDesign[]>(session,{action:'list'})
 export const createStudioDesign=(session:StudioCloudSession,file:DesignFile)=>request<StudioCloudDesign>(session,{action:'create',file})
-export const saveStudioDesign=(session:StudioCloudSession,designId:string,file:DesignFile)=>request<StudioCloudDesign>(session,{action:'save',designId,file})
+export const saveStudioDesign=(session:StudioCloudSession,designId:string,file:DesignFile,expectedUpdatedAt?:string)=>request<StudioCloudDesign>(session,{action:'save',designId,file,expectedUpdatedAt})
 export const listStudioVersions=(session:StudioCloudSession,designId:string)=>request<StudioCloudVersion[]>(session,{action:'versions',designId})
+
+export const checkpointStudioDesign=(session:StudioCloudSession,designId:string,label:string)=>request<{id:string}>(session,{action:'checkpoint',designId,label})
+export const restoreStudioDesign=(session:StudioCloudSession,designId:string,versionNumber:number)=>request<StudioCloudDesign>(session,{action:'restore',designId,versionNumber})
