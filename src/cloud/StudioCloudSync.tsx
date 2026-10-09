@@ -11,6 +11,9 @@ type SyncState = { status: Status; error?: string }
 const stateListeners = new Set<(s: SyncState) => void>()
 let syncState: SyncState = { status: 'connecting' }
 function emit(s: SyncState) { syncState = s; stateListeners.forEach(fn => fn(s)) }
+export function getStudioCloudDesignId(artistId:string,fileId:string):string|undefined {
+ try {return (JSON.parse(localStorage.getItem('uo-studio-cloud-map:'+artistId)??'{}') as Record<string,string>)[fileId]}catch{return undefined}
+}
 export function useCloudSaveStatus() {
  const [status,setStatus]=useState(syncState)
  useEffect(()=>{stateListeners.add(setStatus);return()=>{stateListeners.delete(setStatus)}},[])
@@ -40,6 +43,7 @@ export function StudioCloudSync() {
   let mapping:Record<string,string>={}
   try { mapping=JSON.parse(localStorage.getItem(scope)??'{}') as Record<string,string> } catch { mapping={} }
   const fingerprints=new Map<string,string>()
+  const remoteTimestamps=new Map<string,string>()
   const queue=new Set<string>()
   const saveMapping=()=>localStorage.setItem(scope,JSON.stringify(mapping))
   const schedule=(id:string)=>{
@@ -60,9 +64,9 @@ export function StudioCloudSync() {
      const fingerprint=JSON.stringify({name:file.name,pages:file.pages,folderId:file.folderId})
      if(fingerprints.get(id)===fingerprint)continue
      const saved=mapping[id]
-      ? await saveStudioDesign(session,mapping[id],file)
+      ? await saveStudioDesign(session,mapping[id],file,remoteTimestamps.get(id))
       : await createStudioDesign(session,file)
-     mapping[id]=saved.id;saveMapping()
+     mapping[id]=saved.id;remoteTimestamps.set(id,saved.updated_at);saveMapping()
      fingerprints.set(id,fingerprint)
      // If an edit occurred during the request, ensure it is uploaded next.
      const latest=useFileStore.getState().getFile(id)
@@ -91,17 +95,17 @@ export function StudioCloudSync() {
       folderId:null,
       updatedAt:d.updated_at,
      }))]}))
-     for(const d of imports){mapping[d.document.id]=d.id}
+     for(const d of imports){mapping[d.document.id]=d.id;remoteTimestamps.set(d.document.id,d.updated_at)}
     }
     for(const file of useFileStore.getState().files){
      if(file.isScratchpad)continue
      const matched=byLocalId.get(file.id)
-     if(matched){mapping[file.id]=matched.id}
+     if(matched){mapping[file.id]=matched.id;remoteTimestamps.set(file.id,matched.updated_at)}
      // Never overwrite an existing cloud document with an older local copy
      // merely because the user opened a different device.
      if(matched&&new Date(matched.updated_at).getTime()>new Date(file.updatedAt).getTime()){
       fingerprints.set(file.id,JSON.stringify({name:file.name,pages:file.pages,folderId:file.folderId}))
-     }else queue.add(file.id)
+     }else if(!matched) queue.add(file.id)
     }
     saveMapping();ready=true;dirty=queue.size>0
     emit({status:'ready'})
