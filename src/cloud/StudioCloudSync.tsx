@@ -80,6 +80,19 @@ export function StudioCloudSync() {
     const cloud=await listStudioDesigns(session)
     if(disposed)return
     const byLocalId=new Map(cloud.map(d=>[d.document?.id,d]))
+    // Import cloud-only files into this browser's library. Preserve the original
+    // document ID, so future saves update the same remote design.
+    const localIds=new Set(useFileStore.getState().files.map(f=>f.id))
+    const imports=cloud.filter(d=>d.document && typeof d.document.id==='string' && Array.isArray(d.document.pages) && !localIds.has(d.document.id))
+    if(imports.length){
+     useFileStore.setState(s=>({files:[...s.files,...imports.map(d=>({
+      ...d.document,
+      isScratchpad:false,
+      folderId:null,
+      updatedAt:d.updated_at,
+     }))]}))
+     for(const d of imports){mapping[d.document.id]=d.id}
+    }
     for(const file of useFileStore.getState().files){
      if(file.isScratchpad)continue
      const matched=byLocalId.get(file.id)
