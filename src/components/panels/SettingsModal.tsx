@@ -2,33 +2,37 @@ import { useState } from 'react'
 import { useUIStore } from '@/store/useUIStore'
 import { useAIStore } from '@/store/useAIStore'
 import { useIsMobile } from '@/hooks/useIsMobile'
-import { Drawer, DrawerContent, DrawerTitle, DrawerClose } from '@/components/ui/drawer'
 import { AI_ENABLED } from '@/lib/aiApi'
 import { AI_MODELS, normalizeAIModel } from '@/lib/aiModels'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { SliderField } from '@/components/controls/SliderField'
 import {
   X,
   Settings,
   Wand2,
   Palette,
   Mouse,
+  ArrowLeft,
+  ChevronRight,
+  Cloud,
+  Keyboard,
 } from 'lucide-react'
 
-type SettingsTab = 'general' | 'ai' | 'canvas' | 'appearance'
+type SettingsTab = 'general' | 'ai' | 'canvas' | 'appearance' | 'keyboard'
 
 const SETTINGS_TABS: { id: SettingsTab; label: string; icon: typeof Settings }[] = [
-  { id: 'general', label: 'General', icon: Settings },
+  { id: 'general', label: 'Saving & Storage', icon: Cloud },
   { id: 'ai', label: 'AI Assistant', icon: Wand2 },
-  { id: 'canvas', label: 'Canvas & Tools', icon: Mouse },
+  { id: 'canvas', label: 'Canvas & Editing', icon: Mouse },
   { id: 'appearance', label: 'Appearance', icon: Palette },
+  { id: 'keyboard', label: 'Keyboard & Nudge', icon: Keyboard },
 ]
 
 export function SettingsModal() {
   const open = useUIStore((s) => s.settingsOpen)
   const setOpen = useUIStore((s) => s.setSettingsOpen)
   const [tab, setTab] = useState<SettingsTab>('general')
+  const [mobileSection, setMobileSection] = useState<SettingsTab | null>(null)
   const isMobile = useIsMobile()
 
   const tabs = SETTINGS_TABS.filter((t) => t.id !== 'ai' || AI_ENABLED)
@@ -38,36 +42,42 @@ export function SettingsModal() {
       {tab === 'ai' && <AISettings />}
       {tab === 'canvas' && <CanvasSettings />}
       {tab === 'appearance' && <AppearanceSettings />}
+      {tab === 'keyboard' && <KeyboardSettings />}
     </>
   )
 
-  // Mobile: a bottom sheet with the tabs as a horizontal pill row.
+  // Mobile: a dedicated full-screen settings workspace, not a short bottom sheet.
   if (isMobile) {
+    if (!open) return null
+    const selected = tabs.find((t) => t.id === mobileSection)
     return (
-      <Drawer open={open} onOpenChange={(o) => !o && setOpen(false)}>
-        <DrawerContent>
-          <div className="flex shrink-0 items-center justify-between px-4 pb-2 pt-0.5">
-            <DrawerTitle className="p-0 text-[16px] font-semibold text-foreground">Settings</DrawerTitle>
-            <DrawerClose asChild>
-              <button className="h-10 rounded-full bg-muted px-4 text-[13px] font-medium text-foreground transition-transform active:scale-[0.96]">Done</button>
-            </DrawerClose>
-          </div>
-          <div className="flex shrink-0 gap-1.5 px-4 pb-3 overflow-x-auto no-scrollbar">
-            {tabs.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className={`shrink-0 px-3.5 h-9 rounded-full text-[13px] font-medium transition-colors ${tab === t.id ? 'bg-foreground text-background' : 'bg-muted/50 text-muted-foreground active:bg-muted'}`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-          <div className="mobile-inspector flex-1 min-h-0 overflow-y-auto px-4 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] no-scrollbar">
-            {body}
-          </div>
-        </DrawerContent>
-      </Drawer>
+      <div className="fixed inset-0 z-[250] flex flex-col bg-background text-foreground" role="dialog" aria-modal="true" aria-label="Studio settings">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3 pt-[calc(env(safe-area-inset-top)+0.75rem)]">
+          <button className="flex min-h-11 items-center gap-2 text-sm font-medium" onClick={() => { if (mobileSection) setMobileSection(null); else setOpen(false) }} aria-label={mobileSection ? 'Back to settings' : 'Close settings'}>
+            <ArrowLeft className="h-5 w-5" />
+            <span>{selected ? selected.label : 'Studio Settings'}</span>
+          </button>
+          <button className="min-h-11 rounded-full bg-muted px-4 text-sm font-medium" onClick={() => { setMobileSection(null); setOpen(false) }}>Done</button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
+          {!selected ? (
+            <div className="mx-auto max-w-lg divide-y divide-border rounded-xl border border-border overflow-hidden">
+              {tabs.map((item) => {
+                const Icon = item.icon
+                return <button key={item.id} className="flex w-full min-h-[72px] items-center gap-4 bg-card px-4 py-3 text-left active:bg-muted/60" onClick={() => { setTab(item.id); setMobileSection(item.id) }}>
+                  <Icon className="h-5 w-5 shrink-0 text-primary" />
+                  <span className="flex-1 text-sm font-medium">{item.label}</span>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </button>
+              })}
+            </div>
+          ) : (
+            <div className="mx-auto max-w-lg">
+              {body}
+            </div>
+          )}
+        </div>
+      </div>
     )
   }
 
@@ -108,7 +118,7 @@ export function SettingsModal() {
         <div className="flex-1 overflow-y-auto p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-[17px] font-semibold text-foreground">
-              {tab === 'general' ? 'General' : tab === 'ai' ? 'AI Assistant' : tab === 'canvas' ? 'Canvas & Tools' : 'Appearance'}
+              {tab === 'general' ? 'General' : tab === 'ai' ? 'AI Assistant' : tab === 'canvas' ? 'Canvas & Editing' : tab === 'keyboard' ? 'Keyboard & Nudge' : 'Appearance'}
             </h2>
             <button className="p-1.5 hover:bg-muted rounded-[5px] cursor-pointer transition-[background-color,transform] active:scale-[0.96]" onClick={() => setOpen(false)} aria-label="Close settings">
               <X className="w-5 h-5 text-muted-foreground" />
@@ -155,7 +165,7 @@ function GeneralSettings() {
             }
           }}
         >
-          Clear All Data
+          Clear Browser Data
         </Button>
       </div>
     </div>
@@ -208,7 +218,6 @@ function CanvasSettings() {
   const smartPadding = useUIStore((s) => s.smartPadding)
   const toggleSnap = useUIStore((s) => s.toggleSnap)
   const toggleSmartPadding = useUIStore((s) => s.toggleSmartPadding)
-  const isPro = useUIStore((s) => s.appMode) === 'pro'
   const nudgeSmall = useUIStore((s) => s.nudgeSmall)
   const nudgeLarge = useUIStore((s) => s.nudgeLarge)
   const setNudgeSmall = useUIStore((s) => s.setNudgeSmall)
@@ -237,16 +246,6 @@ function CanvasSettings() {
         </div>
       )}
 
-      {(
-        <div className="border-t border-border pt-6 space-y-4">
-          <h3 className="text-[14px] font-medium text-foreground">Nudge</h3>
-          <p className="text-[12px] text-muted-foreground">How far arrow keys move a selection. Hold Shift for the large amount.</p>
-          <div className="grid grid-cols-2 gap-4">
-            <NudgeField label="Arrow" value={nudgeSmall} onChange={setNudgeSmall} />
-            <NudgeField label="Shift + Arrow" value={nudgeLarge} onChange={setNudgeLarge} />
-          </div>
-        </div>
-      )}
 
       {(
         <div className="border-t border-border pt-6 space-y-4">
@@ -275,6 +274,21 @@ function CanvasSettings() {
       )}
     </div>
   )
+}
+
+function KeyboardSettings() {
+  const nudgeSmall = useUIStore((s) => s.nudgeSmall)
+  const nudgeLarge = useUIStore((s) => s.nudgeLarge)
+  const setNudgeSmall = useUIStore((s) => s.setNudgeSmall)
+  const setNudgeLarge = useUIStore((s) => s.setNudgeLarge)
+  return <div className="space-y-4">
+    <h3 className="text-sm font-medium">Keyboard movement</h3>
+    <p className="text-xs text-muted-foreground">For desktop or an attached keyboard. Arrow keys move the selection; hold Shift for larger movements.</p>
+    <div className="grid grid-cols-2 gap-4">
+      <NudgeField label="Arrow" value={nudgeSmall} onChange={setNudgeSmall} />
+      <NudgeField label="Shift + Arrow" value={nudgeLarge} onChange={setNudgeLarge} />
+    </div>
+  </div>
 }
 
 function AppearanceSettings() {
