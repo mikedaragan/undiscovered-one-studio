@@ -154,7 +154,7 @@ export const useUIStore = create<UIStore>((set) => ({
   nudgeSmall: 1,
   nudgeLarge: 10,
 
-  setAppMode: (mode) => set({ appMode: mode }),
+  setAppMode: () => set({ appMode: 'pro' }),
   setSettingsOpen: (open) => set({ settingsOpen: open }),
   setRightPanel: (panel) => set({ rightPanel: panel }),
   setMobileDrawer: (drawer) => set({ mobileDrawer: drawer }),
