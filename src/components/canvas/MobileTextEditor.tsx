@@ -51,7 +51,7 @@ export function MobileTextEditor() {
   }
 
   return (
-    <div className="fixed inset-0 z-[200] flex flex-col bg-background md:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-[200] flex max-h-[65dvh] min-h-[230px] flex-col rounded-t-2xl border-t border-border bg-background shadow-[0_-12px_40px_rgba(0,0,0,0.18)] md:hidden">
       <div className="flex items-center justify-between px-3 h-14 border-b border-border shrink-0">
         <button
           onClick={() => setEditing(null)}
@@ -72,7 +72,7 @@ export function MobileTextEditor() {
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Type your text…"
-        className="flex-1 w-full resize-none bg-transparent px-4 py-4 text-[18px] leading-relaxed text-foreground outline-none placeholder:text-muted-foreground/40"
+        className="min-h-[150px] h-[30dvh] max-h-[45dvh] w-full resize-none bg-transparent px-4 py-4 text-[18px] leading-relaxed text-foreground outline-none placeholder:text-muted-foreground/40"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}
       />
     </div>
