@@ -19,17 +19,21 @@ export function ExportPanel() {
   const [quality, setQuality] = useState(0.92)
   const [dpr, setDpr] = useState(2)
   const [exporting, setExporting] = useState(false)
+  const [exportError, setExportError] = useState('')
   const [justExported, setJustExported] = useState(false)
   const [copyState, setCopyState] = useState<'idle' | 'copying' | 'done'>('idle')
 
   const handleExport = async () => {
     setExporting(true)
+    setExportError('')
     try {
       if (format === 'svg') await exportSvgAndDownload(document)
       else await exportAndDownload(document, { format, quality, dpr })
       playChime()
       setJustExported(true)
       window.setTimeout(() => setJustExported(false), 1400)
+    } catch (error) {
+      setExportError(error instanceof Error ? error.message : 'Export failed. Please try again.')
     } finally {
       setExporting(false)
     }
@@ -142,6 +146,7 @@ export function ExportPanel() {
         </Button>
       </motion.div>
 
+      {exportError && <p role="alert" className="text-sm text-destructive">{exportError}</p>}
       {/* Copy the design straight to the clipboard as a PNG. */}
       {CAN_COPY_IMAGE && (
         <Button
