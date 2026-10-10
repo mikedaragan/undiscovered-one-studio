@@ -98,8 +98,11 @@ export function downloadBlob(blob: Blob, filename: string) {
   const link = document.createElement('a')
   link.download = filename
   link.href = url
+  document.body.appendChild(link)
   link.click()
-  URL.revokeObjectURL(url)
+  link.remove()
+  // WebKit may not have started consuming the blob at click time.
+  window.setTimeout(() => URL.revokeObjectURL(url), 60000)
 }
 
 export async function exportAndDownload(
