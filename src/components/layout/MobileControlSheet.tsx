@@ -4,6 +4,8 @@ import { SlidersHorizontal, Copy, Trash2, Type, Paintbrush, Move, Sparkles } fro
 import { Drawer, DrawerContent, DrawerTitle, DrawerClose } from '@/components/ui/drawer'
 import { LayerListPanel } from '@/components/panels/LayerListPanel'
 import { LayerInspector } from '@/components/panels/LayerInspector'
+import { ExportPanel } from '@/components/panels/ExportPanel'
+import { useUIStore } from '@/store/useUIStore'
 import { useDesignStore } from '@/store/useDesignStore'
 import { haptic } from '@/lib/haptics'
 
@@ -50,6 +52,8 @@ const DETENTS: number[] = [0.55, 0.92]
 
 export function MobileControlSheet() {
   const [drawer, setDrawer] = useState<'layers' | 'inspector' | null>(null)
+  const exportPanelOpen = useUIStore((s) => s.exportPanelOpen)
+  const setExportPanelOpen = useUIStore((s) => s.setExportPanelOpen)
   const [inspectorTab, setInspectorTab] = useState<'style' | 'layout' | 'effects'>('style')
   const [propSnap, setPropSnap] = useState<number | string | null>(DETENTS[0])
   const [layerSnap, setLayerSnap] = useState<number | string | null>(DETENTS[0])
@@ -79,6 +83,14 @@ export function MobileControlSheet() {
 
   return (
     <>
+      <Drawer open={exportPanelOpen} onOpenChange={setExportPanelOpen} snapPoints={DETENTS}>
+        <DrawerContent className="mt-0 h-[92dvh] max-h-none md:hidden">
+          <SheetHeader title="Export design" />
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
+            <ExportPanel />
+          </div>
+        </DrawerContent>
+      </Drawer>
       <AnimatePresence>
         {drawer === null && (hasSelection || editable) && (
           <motion.div
