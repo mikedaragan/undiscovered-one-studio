@@ -479,7 +479,7 @@ export const useDesignStore = create<DesignStore>()(
             const contentChanged =
               'content' in snapped || 'fontSize' in snapped || 'fontWeight' in snapped ||
               'letterSpacing' in snapped || 'textTransform' in snapped || 'lineHeight' in snapped ||
-              'verticalTrim' in snapped
+              'verticalTrim' in snapped || 'textSizing' in snapped
             if (tl.textSizing === 'auto-width' && snapped.width === undefined && contentChanged) {
               merged = { ...merged, ...fitAutoWidthText(tl) }
             } else if (tl.textSizing === 'auto-height' && (contentChanged || 'width' in snapped)) {
