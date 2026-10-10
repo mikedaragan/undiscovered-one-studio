@@ -24,6 +24,7 @@ import {
   ArrowUp,
   ArrowDown,
   GripVertical,
+  MoreHorizontal,
 } from 'lucide-react'
 import type { LayerType } from '@/types/design'
 import type { Page } from '@/types/workspace'
@@ -502,6 +503,7 @@ function LayerRow({
   }
 }) {
   const Icon = LAYER_ICONS[layer.type as LayerType] ?? Square
+  const [mobileActionsOpen, setMobileActionsOpen] = useState(false)
 
   return (
     <div
@@ -540,7 +542,7 @@ function LayerRow({
         />
       ) : (
         <span
-          className="text-[12px] truncate flex-1 text-foreground/80"
+          className="text-[12px] truncate flex-1 min-w-0 text-foreground/80"
           onDoubleClick={rename ? (e) => { e.stopPropagation(); rename.onStart() } : undefined}
         >
           {layer.name}
@@ -557,21 +559,18 @@ function LayerRow({
           onClick={(e) => { e.stopPropagation(); onLock() }} aria-label={layer.locked ? 'Unlock layer' : 'Lock layer'}>
           {layer.locked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
         </button>
-        {onMoveForward && <button className="flex h-10 w-9 items-center justify-center rounded-md text-muted-foreground md:hidden" onClick={(e) => { e.stopPropagation(); onMoveForward() }} aria-label="Bring layer forward" title="Bring forward"><ArrowUp className="h-4 w-4" /></button>}
-        {onMoveBackward && <button className="flex h-10 w-9 items-center justify-center rounded-md text-muted-foreground md:hidden" onClick={(e) => { e.stopPropagation(); onMoveBackward() }} aria-label="Send layer backward" title="Send backward"><ArrowDown className="h-4 w-4" /></button>}
-        {rename && !rename.editing && <button className="flex h-10 w-9 items-center justify-center rounded-md text-muted-foreground md:hidden" onClick={(e) => { e.stopPropagation(); rename.onStart() }} aria-label="Rename layer"><Pencil className="h-4 w-4" /></button>}
-        {onDuplicate && (
-          <button className="p-2 md:p-0.5 hover:bg-muted rounded-[3px] text-muted-foreground/50 hover:text-muted-foreground cursor-pointer"
-            onClick={(e) => { e.stopPropagation(); onDuplicate() }} aria-label="Duplicate layer">
-            <Copy className="w-3.5 h-3.5" />
-          </button>
-        )}
-        {onDelete && (
-          <button className="p-2 md:p-0.5 hover:bg-muted rounded-[3px] text-muted-foreground/50 hover:text-destructive cursor-pointer"
-            onClick={(e) => { e.stopPropagation(); onDelete() }} aria-label="Delete layer">
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
-        )}
+        <div className="relative md:hidden">
+          <button type="button" className="flex h-10 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted" aria-label="More layer actions" aria-expanded={mobileActionsOpen} onClick={e => { e.stopPropagation(); setMobileActionsOpen(v => !v) }}><MoreHorizontal className="h-5 w-5" /></button>
+          {mobileActionsOpen && <div className="absolute right-0 top-full z-50 w-44 rounded-lg border border-border bg-card p-1 shadow-xl" onClick={e => e.stopPropagation()}>
+            {rename && <button className="w-full rounded px-3 py-2 text-left text-sm hover:bg-muted" onClick={() => { setMobileActionsOpen(false); rename.onStart() }}>Rename</button>}
+            {onMoveForward && <button className="w-full rounded px-3 py-2 text-left text-sm hover:bg-muted" onClick={() => { setMobileActionsOpen(false); onMoveForward() }}>Bring forward</button>}
+            {onMoveBackward && <button className="w-full rounded px-3 py-2 text-left text-sm hover:bg-muted" onClick={() => { setMobileActionsOpen(false); onMoveBackward() }}>Send backward</button>}
+            {onDuplicate && <button className="w-full rounded px-3 py-2 text-left text-sm hover:bg-muted" onClick={() => { setMobileActionsOpen(false); onDuplicate() }}>Duplicate</button>}
+            {onDelete && <button className="w-full rounded px-3 py-2 text-left text-sm text-destructive hover:bg-muted" onClick={() => { setMobileActionsOpen(false); onDelete() }}>Delete</button>}
+          </div>}
+        </div>
+        {onDuplicate && <button className="hidden md:inline-flex p-0.5 hover:bg-muted rounded-[3px] text-muted-foreground/50 hover:text-muted-foreground" onClick={e => { e.stopPropagation(); onDuplicate() }} aria-label="Duplicate layer"><Copy className="w-3.5 h-3.5" /></button>}
+        {onDelete && <button className="hidden md:inline-flex p-0.5 hover:bg-muted rounded-[3px] text-muted-foreground/50 hover:text-destructive" onClick={e => { e.stopPropagation(); onDelete() }} aria-label="Delete layer"><Trash2 className="w-3.5 h-3.5" /></button>}
       </div>
     </div>
   )
