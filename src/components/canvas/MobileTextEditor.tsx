@@ -124,6 +124,15 @@ export function MobileTextEditor() {
               ))}
             </div>
           </div>
+          <div className="flex flex-col gap-2">
+            <span className="text-sm font-medium">Text box sizing</span>
+            <div className="grid grid-cols-3 gap-2">
+              {([{ value: 'auto-width', label: 'Auto width' }, { value: 'auto-height', label: 'Auto height' }, { value: 'fixed', label: 'Fixed' }] as const).map(mode => (
+                <button key={mode.value} type="button" aria-pressed={(layer.textSizing ?? 'fixed') === mode.value} onClick={() => changeStyle({ textSizing: mode.value })} className={`min-h-11 rounded-lg border px-1 text-xs font-medium ${(layer.textSizing ?? 'fixed') === mode.value ? 'border-primary bg-primary/10 text-primary' : 'border-border'}`}>{mode.label}</button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">Auto width grows with the text. Auto height wraps at the current width. Fixed keeps both dimensions.</p>
+          </div>
           <p className="text-xs text-muted-foreground">For color, effects, and positioning, select the text and open Properties.</p>
         </div>
       )}
